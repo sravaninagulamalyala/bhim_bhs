@@ -1,0 +1,31 @@
+server:
+  port: 8085
+  servlet:
+    context-path: /api/v1
+
+spring:
+  application:
+    name: bharathi-jharijana-sangam-backend
+  datasource:
+    url: jdbc:mysql://localhost:3306/bhs_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+
+jwt:
+  secret: use-a-long-secure-secret-key-use-a-long-secure-secret-key
+  expiration: 86400000
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
