@@ -1,4 +1,8 @@
-target/
+backend/target/
+bhs_flutter_app/build/
+bhs_flutter_app/.dart_tool/
+bhs_flutter_app/.flutter-plugins
+bhs_flutter_app/.flutter-plugins-dependencies
 *.log
 .idea/
 .vscode/
