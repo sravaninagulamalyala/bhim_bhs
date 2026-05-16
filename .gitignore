@@ -7,3 +7,7 @@ bhs_flutter_app/.flutter-plugins-dependencies
 .idea/
 .vscode/
 *.iml
+.classpath
+.factorypath
+.project
+.settings/
