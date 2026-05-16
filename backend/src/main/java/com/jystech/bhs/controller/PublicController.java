@@ -19,12 +19,12 @@ public class PublicController {
     @GetMapping("/home-content")
     public ApiResponse<MemberDtos.HomeContentResponse> homeContent() {
         return ApiResponse.ok(new MemberDtos.HomeContentResponse(
-                "BHARATHI JHARIJANA SANGAM",
+                "BHARATHIYA HARIJANA SANGAM",
                 "Reg 46/2614",
                 "H.No: 7-6-110, Gowtham Nagar, Bowenpally, Hyderabad - 500011",
                 "ambedkar.jpg",
                 "Bhimrao Ramji Ambedkar was an Indian jurist, economist, social reformer and politician who chaired the committee that drafted the Constitution of India based on the debates of the Constituent Assembly of India.",
-                "JYS Technologies Pvt Ltd"
+                "MJYS Nexora Pvt Ltd"
         ));
     }
 

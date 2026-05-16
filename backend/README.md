@@ -1,10 +1,10 @@
 # bharathi-jharijana-sangam-backend
 
-Lightweight Java 17 Spring Boot backend for **BHARATHI JHARIJANA SANGAM** family/member management.
+Lightweight Java 17 Spring Boot backend for **BHARATHIYA HARIJANA SANGAM** family/member management.
 
 ## Association
 
-- Name: BHARATHI JHARIJANA SANGAM
+- Name: BHARATHIYA HARIJANA SANGAM
 - Registration No: Reg 46/2614
 - Address: H.No: 7-6-110, Gowtham Nagar, Bowenpally, Hyderabad - 500011
 - Base URL: `https://meghaconnect.cloud:8085/api/v1`
@@ -152,8 +152,9 @@ Mobile examples:
 
 ## Roles
 
-- `SUPER_ADMIN`: login, Excel upload, staff creation, all modules
-- `SECRETARY`: attendance, member updates, family mapping, reports
-- `TREASURER`: credit/debit transactions, transaction reports
+- `SUPER_ADMIN`: login, Excel upload, staff creation, member administration, reports, search, view-only attendance/transactions
+- `SECRETARY`: member updates, family mapping, reports
+- `GENERAL_SECRETARY`: attendance meeting creation and attendance marking/updating
+- `TREASURER`: credit/debit transaction creation/updating and transaction reports
 - Logged-in staff: attendance view, transaction view, member search, report download
 - Public: home, member registration, active family/member counts

@@ -9,7 +9,7 @@ class BhsApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'BHARATHI JHARIJANA SANGAM',
+      title: 'BHARATHIYA HARIJANA SANGAM',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0D47A1)),
         scaffoldBackgroundColor: const Color(0xFFF4F7FB),

@@ -39,8 +39,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**", "/public/**", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("SUPER_ADMIN")
-                        .requestMatchers("/attendance/meeting", "/attendance/mark").hasAnyRole("SECRETARY", "SUPER_ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/transactions").hasAnyRole("TREASURER", "SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/attendance/meeting", "/attendance/mark").hasRole("GENERAL_SECRETARY")
+                        .requestMatchers(HttpMethod.PUT, "/attendance/**").hasRole("GENERAL_SECRETARY")
+                        .requestMatchers(HttpMethod.POST, "/transactions").hasRole("TREASURER")
+                        .requestMatchers(HttpMethod.PUT, "/transactions/**").hasRole("TREASURER")
                         .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

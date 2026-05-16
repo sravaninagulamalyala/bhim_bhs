@@ -13,7 +13,7 @@ public class OpenApiConfig {
     @Bean
     OpenAPI openAPI() {
         return new OpenAPI()
-                .info(new Info().title("BHARATHI JHARIJANA SANGAM API").version("v1"))
+                .info(new Info().title("BHARATHIYA HARIJANA SANGAM API").version("v1"))
                 .servers(List.of(new Server().url("https://meghaconnect.cloud:8085/api/v1")));
     }
 }

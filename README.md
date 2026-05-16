@@ -1,4 +1,4 @@
-# BHARATHI JHARIJANA SANGAM
+# BHARATHIYA HARIJANA SANGAM
 
 This repository contains both applications:
 

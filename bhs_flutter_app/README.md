@@ -1,6 +1,6 @@
-# BHARATHI JHARIJANA SANGAM Flutter App
+# BHARATHIYA HARIJANA SANGAM Flutter App
 
-Android/iOS Flutter app for BHARATHI JHARIJANA SANGAM family/member management.
+Android/iOS Flutter app for BHARATHIYA HARIJANA SANGAM family/member management.
 
 ## Backend
 

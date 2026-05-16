@@ -6,6 +6,7 @@ import com.jystech.bhs.entity.Attendance;
 import com.jystech.bhs.entity.Meeting;
 import com.jystech.bhs.service.AttendanceService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -18,11 +19,13 @@ public class AttendanceController {
     private final AttendanceService attendanceService;
 
     @PostMapping("/meeting")
+    @PreAuthorize("hasRole('GENERAL_SECRETARY')")
     public ApiResponse<Meeting> meeting(@RequestBody AttendanceDtos.MeetingRequest request) {
         return ApiResponse.message("Meeting created", attendanceService.createMeeting(request));
     }
 
     @PostMapping("/mark")
+    @PreAuthorize("hasRole('GENERAL_SECRETARY')")
     public ApiResponse<List<Attendance>> mark(@RequestBody AttendanceDtos.MarkAttendanceRequest request) {
         return ApiResponse.message("Attendance saved", attendanceService.mark(request));
     }

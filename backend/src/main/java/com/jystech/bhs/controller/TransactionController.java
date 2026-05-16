@@ -6,6 +6,7 @@ import com.jystech.bhs.entity.TransactionRecord;
 import com.jystech.bhs.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.YearMonth;
@@ -19,6 +20,7 @@ public class TransactionController {
     private final TransactionService transactionService;
 
     @PostMapping
+    @PreAuthorize("hasRole('TREASURER')")
     public ApiResponse<TransactionRecord> create(@RequestBody TransactionDtos.TransactionRequest request) {
         return ApiResponse.message("Transaction saved", transactionService.create(request));
     }
