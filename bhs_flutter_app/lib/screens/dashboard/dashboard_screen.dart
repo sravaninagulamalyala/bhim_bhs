@@ -5,6 +5,7 @@ import '../../core/storage/auth_store.dart';
 import '../../core/utils/roles.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../attendance/attendance_screens.dart';
+import '../audit/audit_logs_screen.dart';
 import '../members/member_screens.dart';
 import '../profile/profile_screen.dart';
 import '../reports/report_screens.dart';
@@ -21,6 +22,7 @@ class DashboardScreen extends StatelessWidget {
     final cards = <_DashCard>[
       if (Roles.isSuperAdmin(role)) _DashCard('Excel Upload', Icons.upload_file, const ExcelUploadScreen()),
       if (Roles.isSuperAdmin(role)) _DashCard('Staff Management', Icons.admin_panel_settings, const StaffManagementScreen()),
+      if (Roles.isSuperAdmin(role)) _DashCard('Audit Logs', Icons.history, const AuditLogsScreen()),
       if (Roles.canUpdateMembers(role)) _DashCard('Members', Icons.people, const MemberUpdateScreen()),
       if (Roles.canUpdateMembers(role)) _DashCard('Family Mapping', Icons.family_restroom, const FamilyMappingScreen()),
       if (Roles.canManageAttendance(role)) _DashCard('Attendance Meeting', Icons.event_note, const AttendanceMeetingScreen()),

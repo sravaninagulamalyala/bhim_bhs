@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../screens/attendance/attendance_screens.dart';
+import '../../screens/audit/audit_logs_screen.dart';
 import '../../screens/auth/login_screen.dart';
 import '../../screens/dashboard/dashboard_screen.dart';
 import '../../screens/home/home_screen.dart';
@@ -57,12 +58,13 @@ class BhsDrawer extends StatelessWidget {
           if (auth.isLoggedIn) _item(context, Icons.search, 'Search', const MemberFamilySearchScreen()),
           if (Roles.isSuperAdmin(role)) _item(context, Icons.upload_file, 'Excel Upload', const ExcelUploadScreen()),
           if (Roles.isSuperAdmin(role)) _item(context, Icons.admin_panel_settings, 'Staff Management', const StaffManagementScreen()),
+          if (Roles.isSuperAdmin(role)) _item(context, Icons.history, 'Audit Logs', const AuditLogsScreen()),
           if (Roles.canUpdateMembers(role)) _item(context, Icons.edit, 'Members', const MemberUpdateScreen()),
           if (Roles.canUpdateMembers(role)) _item(context, Icons.family_restroom, 'Family Mapping', const FamilyMappingScreen()),
-          if (Roles.isSecretary(role) || Roles.isSuperAdmin(role)) _item(context, Icons.event, 'Meeting', const AttendanceMeetingScreen()),
-          if (Roles.isSecretary(role) || Roles.isSuperAdmin(role)) _item(context, Icons.fact_check, 'Mark Attendance', const MarkAttendanceScreen()),
+          if (Roles.canManageAttendance(role)) _item(context, Icons.event, 'Meeting', const AttendanceMeetingScreen()),
+          if (Roles.canManageAttendance(role)) _item(context, Icons.fact_check, 'Mark Attendance', const MarkAttendanceScreen()),
           if (auth.isLoggedIn) _item(context, Icons.visibility, 'View Attendance', const ViewAttendanceScreen()),
-          if (Roles.isTreasurer(role) || Roles.isSuperAdmin(role)) _item(context, Icons.payments, 'Transaction Entry', const TransactionEntryScreen()),
+          if (Roles.canManageTransactions(role)) _item(context, Icons.payments, 'Transaction Entry', const TransactionEntryScreen()),
           if (auth.isLoggedIn) _item(context, Icons.receipt_long, 'Transactions View', const TransactionViewScreen()),
           if (auth.isLoggedIn) _item(context, Icons.bar_chart, 'Reports', const ReportsScreen()),
           if (auth.isLoggedIn) _item(context, Icons.grid_on, 'Heatmap View', const HeatmapScreen()),

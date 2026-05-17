@@ -7,13 +7,13 @@ Android/iOS Flutter app for BHARATHIYA HARIJANA SANGAM family/member management.
 Default API base URL:
 
 ```text
-https://meghaconnect.cloud:8085/api/v1
+https://api.meghaconnect.cloud/api/v1
 ```
 
 Override at build/run time:
 
 ```bash
-flutter run --dart-define=BHS_API_BASE_URL=https://your-host:8085/api/v1
+flutter run --dart-define=BHS_API_BASE_URL=https://api.meghaconnect.cloud/api/v1
 ```
 
 ## Modules

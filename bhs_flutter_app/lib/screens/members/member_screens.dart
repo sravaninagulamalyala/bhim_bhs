@@ -58,10 +58,18 @@ class MemberUpdateScreen extends StatefulWidget {
 class _MemberUpdateScreenState extends State<MemberUpdateScreen> {
   final keyword = TextEditingController();
   List members = [];
+  bool loading = false;
 
   Future<void> _search() async {
-    final data = await ApiClient(context.read<AuthStore>()).get('/members/search', query: {'keyword': keyword.text.trim()});
-    setState(() => members = data is List ? data : []);
+    setState(() => loading = true);
+    try {
+      final data = await ApiClient(context.read<AuthStore>()).get('/members/search', query: {'keyword': keyword.text.trim()});
+      setState(() => members = data is List ? data : []);
+    } catch (e) {
+      if (mounted) showSnack(context, '$e');
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
   }
 
   @override
@@ -72,9 +80,10 @@ class _MemberUpdateScreenState extends State<MemberUpdateScreen> {
             padding: const EdgeInsets.all(16),
             child: Row(children: [
               Expanded(child: TextField(controller: keyword, decoration: const InputDecoration(labelText: 'Search member'))),
-              IconButton.filled(onPressed: _search, icon: const Icon(Icons.search)),
+              IconButton.filled(onPressed: loading ? null : _search, icon: loading ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.search)),
             ]),
           ),
+          if (loading) const LinearProgressIndicator(),
           Expanded(
             child: members.isEmpty
                 ? const EmptyView('Search and select a member')
@@ -159,24 +168,58 @@ class _FamilyMappingScreenState extends State<FamilyMappingScreen> {
   List familyCandidates = [];
   Map<String, dynamic>? member;
   Map<String, dynamic>? familySource;
+  int? memberId;
+  int? familyId;
+  bool searchingMembers = false;
+  bool searchingFamilies = false;
+  bool loading = false;
 
   Future<void> _searchMembers() async {
-    final data = await ApiClient(context.read<AuthStore>()).get('/members/search', query: {'keyword': memberKeyword.text.trim()});
-    setState(() => members = data is List ? data : []);
+    setState(() => searchingMembers = true);
+    try {
+      final data = await ApiClient(context.read<AuthStore>()).get('/members/search', query: {'keyword': memberKeyword.text.trim()});
+      setState(() {
+        members = data is List ? data : [];
+        if (memberId != null && !members.any((m) => _id(m) == memberId)) {
+          member = null;
+          memberId = null;
+        }
+      });
+    } catch (e) {
+      if (mounted) showSnack(context, '$e');
+    } finally {
+      if (mounted) setState(() => searchingMembers = false);
+    }
   }
 
   Future<void> _searchFamilies() async {
-    final data = await ApiClient(context.read<AuthStore>()).get('/members/search', query: {'keyword': familyKeyword.text.trim()});
-    setState(() => familyCandidates = data is List ? data.where((e) => e['familyId'] != null).toList() : []);
+    setState(() => searchingFamilies = true);
+    try {
+      final data = await ApiClient(context.read<AuthStore>()).get('/members/search', query: {'keyword': familyKeyword.text.trim()});
+      setState(() {
+        familyCandidates = data is List ? data.where((e) => e['familyId'] != null).toList() : [];
+        if (familyId != null && !familyCandidates.any((f) => _familyId(f) == familyId)) {
+          familySource = null;
+          familyId = null;
+        }
+      });
+    } catch (e) {
+      if (mounted) showSnack(context, '$e');
+    } finally {
+      if (mounted) setState(() => searchingFamilies = false);
+    }
   }
 
   Future<void> _map() async {
-    if (member == null || familySource == null) return showSnack(context, 'Select member and family');
+    if (memberId == null || familyId == null) return showSnack(context, 'Select member and family');
+    setState(() => loading = true);
     try {
-      await ApiClient(context.read<AuthStore>()).post('/members/map-family', body: {'memberId': member!['id'], 'familyId': familySource!['familyId']});
+      await ApiClient(context.read<AuthStore>()).post('/members/map-family', body: {'memberId': memberId, 'familyId': familyId});
       if (mounted) showSnack(context, 'Family mapped');
     } catch (e) {
       if (mounted) showSnack(context, '$e');
+    } finally {
+      if (mounted) setState(() => loading = false);
     }
   }
 
@@ -184,12 +227,41 @@ class _FamilyMappingScreenState extends State<FamilyMappingScreen> {
   Widget build(BuildContext context) => AppScaffold(
         title: 'Family Mapping',
         body: ListView(padding: const EdgeInsets.all(16), children: [
-          Row(children: [Expanded(child: TextField(controller: memberKeyword, decoration: const InputDecoration(labelText: 'Search member'))), IconButton.filled(onPressed: _searchMembers, icon: const Icon(Icons.search))]),
-          for (final m in members.take(4)) RadioListTile<Map<String, dynamic>>(value: Map<String, dynamic>.from(m), groupValue: member, title: Text('${m['fullName']}'), subtitle: Text('Current family: ${m['familyId'] ?? '-'}'), onChanged: (v) => setState(() => member = v)),
+          Row(children: [Expanded(child: TextField(controller: memberKeyword, decoration: const InputDecoration(labelText: 'Search member'))), IconButton.filled(onPressed: searchingMembers ? null : _searchMembers, icon: searchingMembers ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.search))]),
+          if (searchingMembers) const LinearProgressIndicator(),
+          for (final m in members.take(4))
+            if (_id(m) != null)
+              RadioListTile<int>(
+                value: _id(m)!,
+                groupValue: memberId,
+                title: Text('${m['fullName']}'),
+                subtitle: Text('Current family: ${m['familyId'] ?? '-'}'),
+                onChanged: (v) => setState(() {
+                  memberId = v;
+                  member = Map<String, dynamic>.from(m);
+                }),
+              ),
           const Divider(),
-          Row(children: [Expanded(child: TextField(controller: familyKeyword, decoration: const InputDecoration(labelText: 'Search/select family by member/house'))), IconButton.filled(onPressed: _searchFamilies, icon: const Icon(Icons.search))]),
-          for (final f in familyCandidates.take(4)) RadioListTile<Map<String, dynamic>>(value: Map<String, dynamic>.from(f), groupValue: familySource, title: Text('Family ${f['familyId']} • ${f['houseNo'] ?? ''}'), subtitle: Text('${f['fullName'] ?? ''}'), onChanged: (v) => setState(() => familySource = v)),
-          PrimaryButton(label: 'Map Member to Family', onPressed: _map),
+          Row(children: [Expanded(child: TextField(controller: familyKeyword, decoration: const InputDecoration(labelText: 'Search/select family by member/house'))), IconButton.filled(onPressed: searchingFamilies ? null : _searchFamilies, icon: searchingFamilies ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.search))]),
+          if (searchingFamilies) const LinearProgressIndicator(),
+          for (final f in familyCandidates.take(4))
+            if (_familyId(f) != null)
+              RadioListTile<int>(
+                value: _familyId(f)!,
+                groupValue: familyId,
+                title: Text('Family ${f['familyId']} • ${f['houseNo'] ?? ''}'),
+                subtitle: Text('${f['fullName'] ?? ''}'),
+                onChanged: (v) => setState(() {
+                  familyId = v;
+                  familySource = Map<String, dynamic>.from(f);
+                }),
+              ),
+          if (member != null) Text('Selected member: ${member?['fullName'] ?? ''}'),
+          if (familySource != null) Text('Selected family: ${familySource?['familyId'] ?? ''}'),
+          PrimaryButton(label: 'Map Member to Family', loading: loading, onPressed: _map),
         ]),
       );
+
+  int? _id(dynamic value) => value is Map && value['id'] is num ? (value['id'] as num).toInt() : null;
+  int? _familyId(dynamic value) => value is Map && value['familyId'] is num ? (value['familyId'] as num).toInt() : null;
 }

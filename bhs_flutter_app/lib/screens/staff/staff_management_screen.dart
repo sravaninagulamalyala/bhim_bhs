@@ -19,9 +19,12 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
   List members = [];
   List staff = [];
   Map<String, dynamic>? selectedMember;
+  int? selectedMemberId;
   String role = 'STAFF';
   bool active = true;
   bool loading = false;
+  bool searchingMembers = false;
+  bool loadingStaff = false;
 
   @override
   void initState() {
@@ -32,15 +35,33 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
   ApiClient get api => ApiClient(context.read<AuthStore>());
 
   Future<void> _memberSearch() async {
-    final data = await api.get('/members/search', query: {'keyword': search.text.trim()});
-    setState(() => members = data is List ? data : []);
+    setState(() => searchingMembers = true);
+    try {
+      final data = await api.get('/members/search', query: {'keyword': search.text.trim()});
+      setState(() {
+        members = data is List ? data : [];
+        if (selectedMemberId != null && !members.any((m) => _id(m) == selectedMemberId)) {
+          selectedMember = null;
+          selectedMemberId = null;
+        }
+      });
+    } catch (e) {
+      if (mounted) showSnack(context, '$e');
+    } finally {
+      if (mounted) setState(() => searchingMembers = false);
+    }
   }
 
   Future<void> _loadStaff() async {
+    setState(() => loadingStaff = true);
     try {
       final data = await api.get('/admin/staff');
       setState(() => staff = data is List ? data : []);
-    } catch (_) {}
+    } catch (e) {
+      if (mounted) showSnack(context, '$e');
+    } finally {
+      if (mounted) setState(() => loadingStaff = false);
+    }
   }
 
   Future<void> _create() async {
@@ -51,7 +72,7 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
     setState(() => loading = true);
     try {
       await api.post('/admin/staff/create', body: {
-        'memberId': selectedMember?['id'],
+        'memberId': selectedMemberId,
         'adminId': adminId.text.trim(),
         'password': password.text,
         'role': role,
@@ -59,6 +80,8 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
       });
       adminId.clear();
       password.clear();
+      selectedMember = null;
+      selectedMemberId = null;
       await _loadStaff();
       if (mounted) showSnack(context, 'Staff created');
     } catch (e) {
@@ -75,18 +98,27 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
       body: ListView(padding: const EdgeInsets.all(16), children: [
         Row(children: [
           Expanded(child: TextField(controller: search, decoration: const InputDecoration(labelText: 'Search member by name/mobile'))),
-          IconButton.filled(onPressed: _memberSearch, icon: const Icon(Icons.search)),
+          IconButton.filled(onPressed: searchingMembers ? null : _memberSearch, icon: searchingMembers ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.search)),
         ]),
+        if (searchingMembers) const LinearProgressIndicator(),
         for (final m in members.take(5))
-          RadioListTile<Map<String, dynamic>>(
-            value: Map<String, dynamic>.from(m),
-            groupValue: selectedMember,
+          if (_id(m) != null)
+          RadioListTile<int>(
+            value: _id(m)!,
+            groupValue: selectedMemberId,
             title: Text('${m['fullName'] ?? ''}'),
             subtitle: Text('ID: ${m['id']} • ${m['mobileNo'] ?? ''}'),
-            onChanged: (v) => setState(() => selectedMember = v),
+            onChanged: (v) => setState(() {
+              selectedMemberId = v;
+              selectedMember = Map<String, dynamic>.from(m);
+            }),
           ),
         const SizedBox(height: 12),
-        TextFormField(readOnly: true, decoration: InputDecoration(labelText: 'Member ID', hintText: '${selectedMember?['id'] ?? ''}')),
+        TextFormField(readOnly: true, decoration: InputDecoration(labelText: 'Member ID', hintText: '${selectedMemberId ?? ''}')),
+        const SizedBox(height: 10),
+        TextFormField(readOnly: true, decoration: InputDecoration(labelText: 'Member Name', hintText: '${selectedMember?['fullName'] ?? ''}')),
+        const SizedBox(height: 10),
+        TextFormField(readOnly: true, decoration: InputDecoration(labelText: 'Mobile No', hintText: '${selectedMember?['mobileNo'] ?? ''}')),
         const SizedBox(height: 10),
         TextField(controller: adminId, decoration: const InputDecoration(labelText: 'Admin ID')),
         const SizedBox(height: 10),
@@ -95,7 +127,7 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
         DropdownButtonFormField<String>(
           value: role,
           decoration: const InputDecoration(labelText: 'Role'),
-          items: const ['SUPER_ADMIN', 'PRESIDENT', 'VICE_PRESIDENT', 'GENERAL_SECRETARY', 'JOINT_SECRETARY', 'ORG_SECRETARY', 'TREASURER', 'SECRETARY', 'STAFF', 'MEMBER']
+          items: _roles
               .map((e) => DropdownMenuItem(value: e, child: Text(e)))
               .toList(),
           onChanged: (v) => setState(() => role = v ?? 'STAFF'),
@@ -104,8 +136,69 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
         PrimaryButton(label: 'Create Staff Login', loading: loading, onPressed: _create),
         const Divider(),
         const Text('Existing staff', style: TextStyle(fontWeight: FontWeight.bold)),
-        for (final s in staff) ListTile(title: Text('${s['adminId'] ?? ''}'), subtitle: Text('${s['role'] ?? ''} • Active: ${s['active'] ?? ''}')),
+        if (loadingStaff) const LinearProgressIndicator(),
+        for (final s in staff)
+          ListTile(
+            title: Text('${s['adminId'] ?? ''}'),
+            subtitle: Text('${s['role'] ?? ''} • ${s['fullName'] ?? ''} • Active: ${s['active'] ?? ''}'),
+            trailing: const Icon(Icons.edit),
+            onTap: () => _editStaff(Map<String, dynamic>.from(s)),
+          ),
       ]),
     );
   }
+
+  Future<void> _editStaff(Map<String, dynamic> staffRow) async {
+    final passwordController = TextEditingController();
+    String editedRole = '${staffRow['role'] ?? 'STAFF'}';
+    bool editedActive = staffRow['active'] != false;
+    final updated = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: Text('Edit ${staffRow['adminId'] ?? 'Staff'}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                value: editedRole,
+                decoration: const InputDecoration(labelText: 'Role'),
+                items: _roles.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                onChanged: (v) => setDialogState(() => editedRole = v ?? 'STAFF'),
+              ),
+              const SizedBox(height: 10),
+              TextField(controller: passwordController, decoration: const InputDecoration(labelText: 'New password (optional)'), obscureText: true),
+              SwitchListTile(value: editedActive, onChanged: (v) => setDialogState(() => editedActive = v), title: const Text('Active')),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+            FilledButton(
+              onPressed: () async {
+                try {
+                  await api.put('/admin/staff/${staffRow['id']}', body: {
+                    'password': passwordController.text.trim().isEmpty ? null : passwordController.text,
+                    'role': editedRole,
+                    'active': editedActive,
+                  });
+                  if (dialogContext.mounted) Navigator.pop(dialogContext, true);
+                } catch (e) {
+                  if (dialogContext.mounted) showSnack(dialogContext, '$e');
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (updated == true) {
+      await _loadStaff();
+      if (mounted) showSnack(context, 'Staff updated');
+    }
+  }
+
+  int? _id(dynamic value) => value is Map && value['id'] is num ? (value['id'] as num).toInt() : null;
+
+  static const _roles = ['SUPER_ADMIN', 'PRESIDENT', 'VICE_PRESIDENT', 'GENERAL_SECRETARY', 'JOINT_SECRETARY', 'ORG_SECRETARY', 'TREASURER', 'SECRETARY', 'STAFF', 'MEMBER'];
 }

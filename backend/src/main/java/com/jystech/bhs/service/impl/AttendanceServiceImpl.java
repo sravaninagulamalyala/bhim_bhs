@@ -5,6 +5,7 @@ import com.jystech.bhs.dto.AttendanceDtos;
 import com.jystech.bhs.entity.Attendance;
 import com.jystech.bhs.entity.Meeting;
 import com.jystech.bhs.entity.Member;
+import com.jystech.bhs.exception.BadRequestException;
 import com.jystech.bhs.exception.ResourceNotFoundException;
 import com.jystech.bhs.repository.AttendanceRepository;
 import com.jystech.bhs.repository.MeetingRepository;
@@ -29,10 +30,16 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     public Meeting createMeeting(AttendanceDtos.MeetingRequest request) {
+        if (request.meetingDate() == null) {
+            throw new BadRequestException("Meeting date is required");
+        }
+        if (request.title() == null || request.title().isBlank()) {
+            throw new BadRequestException("Meeting title is required");
+        }
         Meeting meeting = new Meeting();
         meeting.setMeetingDate(request.meetingDate());
-        meeting.setTitle(request.title());
-        meeting.setRemarks(request.remarks());
+        meeting.setTitle(request.title().trim());
+        meeting.setRemarks(request.remarks() == null ? null : request.remarks().trim());
         meeting.setCreatedBy(currentUser());
         Meeting saved = meetingRepository.save(meeting);
         auditService.log("CREATE", "ATTENDANCE", "Created meeting id: " + saved.getId());
@@ -41,9 +48,18 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     public List<Attendance> mark(AttendanceDtos.MarkAttendanceRequest request) {
+        if (request.meetingId() == null) {
+            throw new BadRequestException("Meeting id is required");
+        }
+        if (request.attendance() == null || request.attendance().isEmpty()) {
+            throw new BadRequestException("Attendance list is required");
+        }
         meetingRepository.findById(request.meetingId()).orElseThrow(() -> new ResourceNotFoundException("Meeting not found"));
         List<Attendance> saved = new ArrayList<>();
         for (AttendanceDtos.AttendanceItem item : request.attendance()) {
+            if (item.memberId() == null) {
+                throw new BadRequestException("Member id is required");
+            }
             Member member = memberRepository.findById(item.memberId()).orElseThrow(() -> new ResourceNotFoundException("Member not found"));
             Attendance attendance = attendanceRepository.findByMeetingIdAndMemberId(request.meetingId(), item.memberId()).orElseGet(Attendance::new);
             attendance.setMeetingId(request.meetingId());

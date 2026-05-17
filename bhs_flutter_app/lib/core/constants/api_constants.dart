@@ -1,7 +1,7 @@
 class ApiConstants {
   static const String baseUrl = String.fromEnvironment(
     'BHS_API_BASE_URL',
-    defaultValue: 'https://meghaconnect.cloud:8085/api/v1',
+    defaultValue: 'https://api.meghaconnect.cloud/api/v1',
   );
   static const String associationName = 'BHARATHIYA HARIJANA SANGAM';
   static const String registrationNo = 'Reg 46/2614';

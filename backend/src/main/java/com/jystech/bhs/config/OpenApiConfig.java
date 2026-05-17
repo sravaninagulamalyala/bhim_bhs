@@ -14,6 +14,6 @@ public class OpenApiConfig {
     OpenAPI openAPI() {
         return new OpenAPI()
                 .info(new Info().title("BHARATHIYA HARIJANA SANGAM API").version("v1"))
-                .servers(List.of(new Server().url("https://meghaconnect.cloud:8085/api/v1")));
+                .servers(List.of(new Server().url("https://api.meghaconnect.cloud/api/v1")));
     }
 }

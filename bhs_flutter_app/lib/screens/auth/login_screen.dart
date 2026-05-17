@@ -38,7 +38,9 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
           captchaKey = '${data['key'] ?? ''}';
         });
       }
-    } catch (_) {}
+    } catch (e) {
+      if (mounted) showSnack(context, '$e');
+    }
   }
 
   Future<void> _login() async {

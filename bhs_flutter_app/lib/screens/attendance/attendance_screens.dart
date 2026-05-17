@@ -18,13 +18,20 @@ class _AttendanceMeetingScreenState extends State<AttendanceMeetingScreen> {
   DateTime date = DateTime.now();
   final title = TextEditingController();
   final remarks = TextEditingController();
+  bool loading = false;
 
   Future<void> _create() async {
+    if (title.text.trim().isEmpty) return showSnack(context, 'Meeting title is required');
+    setState(() => loading = true);
     try {
       await ApiClient(context.read<AuthStore>()).post('/attendance/meeting', body: {'meetingDate': _date(date), 'title': title.text.trim(), 'remarks': remarks.text.trim()});
       if (mounted) showSnack(context, 'Meeting created');
+      title.clear();
+      remarks.clear();
     } catch (e) {
       if (mounted) showSnack(context, '$e');
+    } finally {
+      if (mounted) setState(() => loading = false);
     }
   }
 
@@ -44,7 +51,7 @@ class _AttendanceMeetingScreenState extends State<AttendanceMeetingScreen> {
           const SizedBox(height: 10),
           TextField(controller: remarks, decoration: const InputDecoration(labelText: 'Remarks'), minLines: 2, maxLines: 3),
           const SizedBox(height: 16),
-          PrimaryButton(label: 'Create Meeting', onPressed: _create),
+          PrimaryButton(label: 'Create Meeting', loading: loading, onPressed: _create),
         ]),
       );
 }
@@ -60,21 +67,33 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
   final keyword = TextEditingController();
   List members = [];
   final marked = <int, bool>{};
+  bool searching = false;
+  bool loading = false;
 
   Future<void> _search() async {
-    final data = await ApiClient(context.read<AuthStore>()).get('/members/search', query: {'keyword': keyword.text.trim()});
-    setState(() => members = data is List ? data : []);
+    setState(() => searching = true);
+    try {
+      final data = await ApiClient(context.read<AuthStore>()).get('/members/search', query: {'keyword': keyword.text.trim()});
+      setState(() => members = data is List ? data : []);
+    } catch (e) {
+      if (mounted) showSnack(context, '$e');
+    } finally {
+      if (mounted) setState(() => searching = false);
+    }
   }
 
   Future<void> _save() async {
     if (meetingId.text.trim().isEmpty) return showSnack(context, 'Meeting ID is required');
     final items = marked.entries.map((e) => {'memberId': e.key, 'attended': e.value}).toList();
     if (items.isEmpty) return showSnack(context, 'Mark at least one member');
+    setState(() => loading = true);
     try {
       await ApiClient(context.read<AuthStore>()).post('/attendance/mark', body: {'meetingId': int.tryParse(meetingId.text), 'attendance': items});
       if (mounted) showSnack(context, 'Attendance saved');
     } catch (e) {
       if (mounted) showSnack(context, '$e');
+    } finally {
+      if (mounted) setState(() => loading = false);
     }
   }
 
@@ -87,11 +106,12 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
             child: Column(children: [
               TextField(controller: meetingId, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Meeting ID')),
               const SizedBox(height: 10),
-              Row(children: [Expanded(child: TextField(controller: keyword, decoration: const InputDecoration(labelText: 'Search members'))), IconButton.filled(onPressed: _search, icon: const Icon(Icons.search))]),
+              Row(children: [Expanded(child: TextField(controller: keyword, decoration: const InputDecoration(labelText: 'Search members'))), IconButton.filled(onPressed: searching ? null : _search, icon: searching ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.search))]),
               const SizedBox(height: 8),
-              PrimaryButton(label: 'Save Attendance', onPressed: _save),
+              PrimaryButton(label: 'Save Attendance', loading: loading, onPressed: _save),
             ]),
           ),
+          if (searching) const LinearProgressIndicator(),
           Expanded(
             child: members.isEmpty
                 ? const EmptyView('Search members to mark attendance')
@@ -99,7 +119,7 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
                     itemCount: members.length,
                     itemBuilder: (_, i) {
                       final m = members[i];
-                      final id = m['id'] as int;
+                      final id = (m['id'] as num).toInt();
                       return CheckboxListTile(
                         value: marked[id] ?? false,
                         onChanged: (v) => setState(() => marked[id] = v ?? false),

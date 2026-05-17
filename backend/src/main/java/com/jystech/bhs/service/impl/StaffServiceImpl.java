@@ -25,11 +25,20 @@ public class StaffServiceImpl implements StaffService {
 
     @Override
     public Staff create(MemberDtos.StaffCreateRequest request) {
+        if (request.adminId() == null || request.adminId().isBlank()) {
+            throw new BadRequestException("Admin id is required");
+        }
+        if (request.password() == null || request.password().isBlank()) {
+            throw new BadRequestException("Password is required");
+        }
+        if (request.role() == null) {
+            throw new BadRequestException("Role is required");
+        }
         if (staffRepository.existsByAdminId(request.adminId())) {
             throw new BadRequestException("Admin id already exists");
         }
         Staff staff = new Staff();
-        staff.setAdminId(request.adminId());
+        staff.setAdminId(request.adminId().trim());
         staff.setPassword(passwordEncoder.encode(request.password()));
         staff.setRole(request.role());
         staff.setActive(request.active());

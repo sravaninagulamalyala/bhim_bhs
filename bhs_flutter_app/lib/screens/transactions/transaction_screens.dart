@@ -23,26 +23,51 @@ class _TransactionEntryScreenState extends State<TransactionEntryScreen> {
   final remarks = TextEditingController();
   List members = [];
   Map<String, dynamic>? selected;
+  int? selectedMemberId;
+  int? selectedFamilyId;
+  bool searching = false;
+  bool loading = false;
 
   Future<void> _search() async {
-    final data = await ApiClient(context.read<AuthStore>()).get('/members/search', query: {'keyword': keyword.text.trim()});
-    setState(() => members = data is List ? data : []);
+    setState(() => searching = true);
+    try {
+      final data = await ApiClient(context.read<AuthStore>()).get('/members/search', query: {'keyword': keyword.text.trim()});
+      setState(() {
+        members = data is List ? data : [];
+        if (selectedMemberId != null && !members.any((m) => _id(m) == selectedMemberId)) {
+          selected = null;
+          selectedMemberId = null;
+          selectedFamilyId = null;
+        }
+      });
+    } catch (e) {
+      if (mounted) showSnack(context, '$e');
+    } finally {
+      if (mounted) setState(() => searching = false);
+    }
   }
 
   Future<void> _save() async {
     if (amount.text.trim().isEmpty) return showSnack(context, 'Amount is required');
+    final parsedAmount = num.tryParse(amount.text.trim());
+    if (parsedAmount == null || parsedAmount <= 0) return showSnack(context, 'Enter a valid amount');
+    setState(() => loading = true);
     try {
       await ApiClient(context.read<AuthStore>()).post('/transactions', body: {
         'transactionDate': _date(date),
         'transactionType': type,
-        'familyId': type == 'CREDIT' && selected != null ? selected!['familyId'] : null,
-        'memberId': type == 'CREDIT' && selected != null ? selected!['id'] : null,
-        'amount': num.tryParse(amount.text.trim()),
+        'familyId': type == 'CREDIT' ? selectedFamilyId : null,
+        'memberId': type == 'CREDIT' ? selectedMemberId : null,
+        'amount': parsedAmount,
         'remarks': remarks.text.trim(),
       });
       if (mounted) showSnack(context, 'Transaction saved');
+      amount.clear();
+      remarks.clear();
     } catch (e) {
       if (mounted) showSnack(context, '$e');
+    } finally {
+      if (mounted) setState(() => loading = false);
     }
   }
 
@@ -58,20 +83,48 @@ class _TransactionEntryScreenState extends State<TransactionEntryScreen> {
               if (picked != null) setState(() => date = picked);
             },
           ),
-          DropdownButtonFormField<String>(value: type, decoration: const InputDecoration(labelText: 'Transaction Type'), items: const ['CREDIT', 'DEBIT'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(), onChanged: (v) => setState(() => type = v ?? 'CREDIT')),
+          DropdownButtonFormField<String>(
+              value: type,
+              decoration: const InputDecoration(labelText: 'Transaction Type'),
+              items: const ['CREDIT', 'DEBIT'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+              onChanged: (v) => setState(() {
+                    type = v ?? 'CREDIT';
+                    if (type == 'DEBIT') {
+                      selected = null;
+                      selectedMemberId = null;
+                      selectedFamilyId = null;
+                    }
+                  })),
           if (type == 'CREDIT') ...[
             const SizedBox(height: 10),
-            Row(children: [Expanded(child: TextField(controller: keyword, decoration: const InputDecoration(labelText: 'Search family/member'))), IconButton.filled(onPressed: _search, icon: const Icon(Icons.search))]),
-            for (final m in members.take(4)) RadioListTile<Map<String, dynamic>>(value: Map<String, dynamic>.from(m), groupValue: selected, title: Text('${m['fullName']}'), subtitle: Text('Family ${m['familyId'] ?? '-'}'), onChanged: (v) => setState(() => selected = v)),
+            Row(children: [Expanded(child: TextField(controller: keyword, decoration: const InputDecoration(labelText: 'Search family/member'))), IconButton.filled(onPressed: searching ? null : _search, icon: searching ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.search))]),
+            if (searching) const LinearProgressIndicator(),
+            for (final m in members.take(4))
+              if (_id(m) != null)
+                RadioListTile<int>(
+                  value: _id(m)!,
+                  groupValue: selectedMemberId,
+                  title: Text('${m['fullName']}'),
+                  subtitle: Text('Family ${m['familyId'] ?? '-'}'),
+                  onChanged: (v) => setState(() {
+                    selectedMemberId = v;
+                    selectedFamilyId = _familyId(m);
+                    selected = Map<String, dynamic>.from(m);
+                  }),
+                ),
+            if (selected != null) Text('Selected: ${selected?['fullName'] ?? ''} • Family ${selected?['familyId'] ?? '-'}'),
           ],
           const SizedBox(height: 10),
           TextField(controller: amount, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Amount')),
           const SizedBox(height: 10),
           TextField(controller: remarks, decoration: const InputDecoration(labelText: 'Remarks'), minLines: 2, maxLines: 3),
           const SizedBox(height: 16),
-          PrimaryButton(label: 'Save Transaction', onPressed: _save),
+          PrimaryButton(label: 'Save Transaction', loading: loading, onPressed: _save),
         ]),
       );
+
+  int? _id(dynamic value) => value is Map && value['id'] is num ? (value['id'] as num).toInt() : null;
+  int? _familyId(dynamic value) => value is Map && value['familyId'] is num ? (value['familyId'] as num).toInt() : null;
 }
 
 class TransactionViewScreen extends StatefulWidget {
