@@ -73,3 +73,24 @@ To override the backend URL:
 ```bash
 flutter run --dart-define=BHS_API_BASE_URL=https://api.meghaconnect.cloud/api/v1
 ```
+
+## Attendance And Search Updates
+
+- Attendance marking is available to `SUPER_ADMIN`, `GENERAL_SECRETARY`, `JOINT_SECRETARY`, `ORG_SECRETARY`, and `SECRETARY`.
+- Any logged-in staff can view attendance.
+- Mark Attendance now starts with a date picker: the app loads an existing meeting for the selected date or shows `Create Meeting for Selected Date`, then lets staff search members and save attendance without typing a meeting ID.
+- View Attendance uses a calendar; dates with meetings are highlighted green, and selecting a green date loads meeting details plus present and absent marked members.
+- Member Search supports name, mobile, house number, and family code. Results include a View action that opens member details, associated family details, and all family members.
+- Family correction actions allow logged-in staff to remove a wrongly tagged member or add/map another member to the selected family after confirmation.
+
+Key backend endpoints:
+
+- `GET /attendance/meeting-by-date?date=yyyy-MM-dd`
+- `POST /attendance/meeting`
+- `POST /attendance/mark`
+- `GET /attendance/meeting-dates?month=yyyy-MM`
+- `GET /attendance/by-date?date=yyyy-MM-dd`
+- `GET /search/members?keyword=`
+- `GET /members/{memberId}/details`
+- `POST /members/family/remove`
+- `POST /members/family/add`

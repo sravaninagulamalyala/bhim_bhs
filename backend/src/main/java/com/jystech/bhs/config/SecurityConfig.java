@@ -39,8 +39,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**", "/public/**", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("SUPER_ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/attendance/meeting", "/attendance/mark").hasRole("GENERAL_SECRETARY")
-                        .requestMatchers(HttpMethod.PUT, "/attendance/**").hasRole("GENERAL_SECRETARY")
+                        .requestMatchers(HttpMethod.POST, "/attendance/meeting", "/attendance/mark")
+                        .hasAnyRole("SUPER_ADMIN", "GENERAL_SECRETARY", "JOINT_SECRETARY", "ORG_SECRETARY", "SECRETARY")
+                        .requestMatchers(HttpMethod.PUT, "/attendance/**")
+                        .hasAnyRole("SUPER_ADMIN", "GENERAL_SECRETARY", "JOINT_SECRETARY", "ORG_SECRETARY", "SECRETARY")
                         .requestMatchers(HttpMethod.POST, "/transactions").hasRole("TREASURER")
                         .requestMatchers(HttpMethod.PUT, "/transactions/**").hasRole("TREASURER")
                         .anyRequest().authenticated())

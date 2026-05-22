@@ -100,13 +100,18 @@ Members:
 
 - `GET /members/search?keyword=`
 - `GET /members/{id}/family`
+- `GET /members/{id}/details`
 - `PUT /members/{id}`
 - `POST /members/map-family`
+- `POST /members/family/remove`
+- `POST /members/family/add`
 
 Attendance:
 
+- `GET /attendance/meeting-by-date?date=yyyy-MM-dd`
 - `POST /attendance/meeting`
 - `POST /attendance/mark`
+- `GET /attendance/meeting-dates?month=yyyy-MM`
 - `GET /attendance/by-meeting/{meetingId}`
 - `GET /attendance/by-date?date=yyyy-MM-dd`
 
@@ -129,6 +134,21 @@ Reports:
 Search:
 
 - `GET /search/member-family?keyword=`
+- `GET /search/members?keyword=`
+
+## Attendance Flow
+
+- Attendance marking is date-first: select a calendar date, load the meeting for that date, or create one with `POST /attendance/meeting`.
+- `POST /attendance/mark` accepts `meetingId` and `attendanceList`; attendance rows are unique by `meeting_id + member_id`.
+- Existing attendance rows are updated, new rows are inserted, `marked_by` is stored from the logged-in staff user, and create/update actions are audited.
+- Attendance viewing is calendar-based: `GET /attendance/meeting-dates?month=yyyy-MM` returns highlighted meeting dates and counts, and `GET /attendance/by-date?date=yyyy-MM-dd` returns meeting details plus present and absent marked members.
+
+## Search and Family Correction Flow
+
+- Logged-in staff can use `GET /search/members?keyword=` to search by name, mobile, house number, or family code.
+- `GET /members/{id}/details` returns the selected member, associated family, and all active family members.
+- `POST /members/family/remove` removes a member from a family after validation and audit logging.
+- `POST /members/family/add` maps a member to a target family after validation and audit logging.
 
 ## Excel Upload Notes
 
@@ -153,8 +173,8 @@ Mobile examples:
 ## Roles
 
 - `SUPER_ADMIN`: login, Excel upload, staff creation, member administration, reports, search, view-only attendance/transactions
-- `SECRETARY`: member updates, family mapping, reports
-- `GENERAL_SECRETARY`: attendance meeting creation and attendance marking/updating
+- `SECRETARY`: member updates, family mapping, reports, attendance meeting creation and attendance marking/updating
+- `SUPER_ADMIN`, `GENERAL_SECRETARY`, `JOINT_SECRETARY`, `ORG_SECRETARY`, `SECRETARY`: attendance meeting creation and attendance marking/updating
 - `TREASURER`: credit/debit transaction creation/updating and transaction reports
-- Logged-in staff: attendance view, transaction view, member search, report download
+- Logged-in staff: attendance view, transaction view, member search, family correction actions, report download
 - Public: home, member registration, active family/member counts

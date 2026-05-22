@@ -89,12 +89,55 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
+    public MemberDtos.MemberDetailsResponse details(Long memberId) {
+        Member member = memberRepository.findById(memberId).orElseThrow(() -> new ResourceNotFoundException("Member not found"));
+        Family family = member.getFamilyId() == null ? null : familyRepository.findById(member.getFamilyId()).orElse(null);
+        List<Member> familyMembers = member.getFamilyId() == null ? List.of(member) : memberRepository.findByFamilyIdAndActiveTrue(member.getFamilyId());
+        return new MemberDtos.MemberDetailsResponse(member, family, familyMembers);
+    }
+
+    @Override
     public Member mapFamily(MemberDtos.MapFamilyRequest request) {
         Member member = memberRepository.findById(request.memberId()).orElseThrow(() -> new ResourceNotFoundException("Member not found"));
         Family family = familyRepository.findById(request.familyId()).orElseThrow(() -> new ResourceNotFoundException("Family not found"));
         member.setFamilyId(family.getId());
         Member saved = memberRepository.save(member);
         auditService.log("UPDATE", "FAMILY_MAPPING", "Mapped member " + member.getId() + " to family " + family.getId());
+        return saved;
+    }
+
+    @Override
+    public Member removeFromFamily(MemberDtos.RemoveFamilyRequest request) {
+        if (request.memberId() == null) throw new BadRequestException("Member id is required");
+        if (request.familyId() == null) throw new BadRequestException("Family id is required");
+        Member member = memberRepository.findById(request.memberId()).orElseThrow(() -> new ResourceNotFoundException("Member not found"));
+        Family family = familyRepository.findById(request.familyId()).orElseThrow(() -> new ResourceNotFoundException("Family not found"));
+        if (!Objects.equals(member.getFamilyId(), family.getId())) {
+            throw new BadRequestException("Member is not mapped to this family");
+        }
+        member.setFamilyId(null);
+        Member saved = memberRepository.save(member);
+        if (Objects.equals(family.getPrimaryMemberId(), member.getId())) {
+            family.setPrimaryMemberId(null);
+            familyRepository.save(family);
+        }
+        auditService.log("UPDATE", "FAMILY_MAPPING", "Removed member " + member.getId() + " from family " + family.getId());
+        return saved;
+    }
+
+    @Override
+    public Member addToFamily(MemberDtos.AddFamilyRequest request) {
+        if (request.memberId() == null) throw new BadRequestException("Member id is required");
+        if (request.targetFamilyId() == null) throw new BadRequestException("Target family id is required");
+        Member member = memberRepository.findById(request.memberId()).orElseThrow(() -> new ResourceNotFoundException("Member not found"));
+        Family family = familyRepository.findById(request.targetFamilyId()).orElseThrow(() -> new ResourceNotFoundException("Family not found"));
+        member.setFamilyId(family.getId());
+        Member saved = memberRepository.save(member);
+        if (family.getPrimaryMemberId() == null) {
+            family.setPrimaryMemberId(saved.getId());
+            familyRepository.save(family);
+        }
+        auditService.log("UPDATE", "FAMILY_MAPPING", "Added member " + member.getId() + " to family " + family.getId());
         return saved;
     }
 

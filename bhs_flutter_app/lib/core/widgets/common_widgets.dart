@@ -61,7 +61,6 @@ class BhsDrawer extends StatelessWidget {
           if (Roles.isSuperAdmin(role)) _item(context, Icons.history, 'Audit Logs', const AuditLogsScreen()),
           if (Roles.canUpdateMembers(role)) _item(context, Icons.edit, 'Members', const MemberUpdateScreen()),
           if (Roles.canUpdateMembers(role)) _item(context, Icons.family_restroom, 'Family Mapping', const FamilyMappingScreen()),
-          if (Roles.canManageAttendance(role)) _item(context, Icons.event, 'Meeting', const AttendanceMeetingScreen()),
           if (Roles.canManageAttendance(role)) _item(context, Icons.fact_check, 'Mark Attendance', const MarkAttendanceScreen()),
           if (auth.isLoggedIn) _item(context, Icons.visibility, 'View Attendance', const ViewAttendanceScreen()),
           if (Roles.canManageTransactions(role)) _item(context, Icons.payments, 'Transaction Entry', const TransactionEntryScreen()),

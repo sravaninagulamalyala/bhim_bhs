@@ -11,6 +11,9 @@ public interface MemberService {
     List<Member> search(String keyword);
     Member update(Long id, MemberDtos.MemberUpdateRequest request);
     List<Member> family(Long memberId);
+    MemberDtos.MemberDetailsResponse details(Long memberId);
     Member mapFamily(MemberDtos.MapFamilyRequest request);
+    Member removeFromFamily(MemberDtos.RemoveFamilyRequest request);
+    Member addToFamily(MemberDtos.AddFamilyRequest request);
     int uploadExcel(MultipartFile file);
 }

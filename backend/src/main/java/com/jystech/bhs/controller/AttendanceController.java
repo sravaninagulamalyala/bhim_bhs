@@ -19,15 +19,28 @@ public class AttendanceController {
     private final AttendanceService attendanceService;
 
     @PostMapping("/meeting")
-    @PreAuthorize("hasRole('GENERAL_SECRETARY')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','GENERAL_SECRETARY','JOINT_SECRETARY','ORG_SECRETARY','SECRETARY')")
     public ApiResponse<Meeting> meeting(@RequestBody AttendanceDtos.MeetingRequest request) {
         return ApiResponse.message("Meeting created", attendanceService.createMeeting(request));
     }
 
     @PostMapping("/mark")
-    @PreAuthorize("hasRole('GENERAL_SECRETARY')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','GENERAL_SECRETARY','JOINT_SECRETARY','ORG_SECRETARY','SECRETARY')")
     public ApiResponse<List<Attendance>> mark(@RequestBody AttendanceDtos.MarkAttendanceRequest request) {
         return ApiResponse.message("Attendance saved", attendanceService.mark(request));
+    }
+
+    @GetMapping("/meeting-by-date")
+    public ApiResponse<AttendanceDtos.MeetingResponse> meetingByDate(@RequestParam LocalDate date) {
+        AttendanceDtos.MeetingResponse meeting = attendanceService.meetingByDate(date);
+        return meeting == null
+                ? ApiResponse.message("No meeting found for selected date", null)
+                : ApiResponse.ok(meeting);
+    }
+
+    @GetMapping("/meeting-dates")
+    public ApiResponse<List<AttendanceDtos.MeetingDateSummary>> meetingDates(@RequestParam String month) {
+        return ApiResponse.ok(attendanceService.meetingDates(month));
     }
 
     @GetMapping("/by-meeting/{meetingId}")
@@ -36,7 +49,7 @@ public class AttendanceController {
     }
 
     @GetMapping("/by-date")
-    public ApiResponse<List<Attendance>> byDate(@RequestParam LocalDate date) {
+    public ApiResponse<AttendanceDtos.AttendanceByDateResponse> byDate(@RequestParam LocalDate date) {
         return ApiResponse.ok(attendanceService.byDate(date));
     }
 }

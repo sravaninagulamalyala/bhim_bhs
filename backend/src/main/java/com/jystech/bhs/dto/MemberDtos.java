@@ -17,5 +17,8 @@ public class MemberDtos {
                                       Integer age, String sex, String mobileNo, String alternateMobileNo, String address,
                                       String houseNo, String area, Boolean active) {}
     public record MapFamilyRequest(Long memberId, Long familyId) {}
+    public record RemoveFamilyRequest(Long memberId, Long familyId) {}
+    public record AddFamilyRequest(Long memberId, Long targetFamilyId) {}
     public record MemberFamilyResponse(Object member, List<?> familyMembers) {}
+    public record MemberDetailsResponse(Object member, Object family, List<?> familyMembers) {}
 }

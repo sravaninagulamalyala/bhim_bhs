@@ -21,6 +21,11 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
               or lower(coalesce(m.mobileNo, '')) like lower(concat('%', :keyword, '%'))
               or lower(coalesce(m.houseNo, '')) like lower(concat('%', :keyword, '%'))
               or lower(coalesce(m.address, '')) like lower(concat('%', :keyword, '%'))
+              or exists (
+                select f.id from Family f
+                where f.id = m.familyId
+                  and lower(coalesce(f.familyCode, '')) like lower(concat('%', :keyword, '%'))
+              )
             )
             order by m.fullName
             """)

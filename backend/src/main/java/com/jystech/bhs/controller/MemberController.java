@@ -26,6 +26,11 @@ public class MemberController {
         return ApiResponse.ok(memberService.family(id));
     }
 
+    @GetMapping("/{id}/details")
+    public ApiResponse<MemberDtos.MemberDetailsResponse> details(@PathVariable Long id) {
+        return ApiResponse.ok(memberService.details(id));
+    }
+
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('SECRETARY','SUPER_ADMIN')")
     public ApiResponse<Member> update(@PathVariable Long id, @RequestBody MemberDtos.MemberUpdateRequest request) {
@@ -36,5 +41,15 @@ public class MemberController {
     @PreAuthorize("hasAnyRole('SECRETARY','SUPER_ADMIN')")
     public ApiResponse<Member> mapFamily(@RequestBody MemberDtos.MapFamilyRequest request) {
         return ApiResponse.message("Family mapped", memberService.mapFamily(request));
+    }
+
+    @PostMapping("/family/remove")
+    public ApiResponse<Member> removeFromFamily(@RequestBody MemberDtos.RemoveFamilyRequest request) {
+        return ApiResponse.message("Member removed from family", memberService.removeFromFamily(request));
+    }
+
+    @PostMapping("/family/add")
+    public ApiResponse<Member> addToFamily(@RequestBody MemberDtos.AddFamilyRequest request) {
+        return ApiResponse.message("Member added to family", memberService.addToFamily(request));
     }
 }

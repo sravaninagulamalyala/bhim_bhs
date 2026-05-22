@@ -11,5 +11,7 @@ public interface AttendanceService {
     Meeting createMeeting(AttendanceDtos.MeetingRequest request);
     List<Attendance> mark(AttendanceDtos.MarkAttendanceRequest request);
     List<Attendance> byMeeting(Long meetingId);
-    List<Attendance> byDate(LocalDate date);
+    AttendanceDtos.MeetingResponse meetingByDate(LocalDate date);
+    List<AttendanceDtos.MeetingDateSummary> meetingDates(String month);
+    AttendanceDtos.AttendanceByDateResponse byDate(LocalDate date);
 }

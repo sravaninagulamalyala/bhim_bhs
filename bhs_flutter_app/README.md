@@ -27,8 +27,8 @@ flutter run --dart-define=BHS_API_BASE_URL=https://api.meghaconnect.cloud/api/v1
 - Staff management
 - Member search and family details
 - Member update
-- Family mapping
-- Attendance meeting, mark attendance, view attendance
+- Search result view actions, member detail view, and family correction mapping
+- Date-first attendance marking and calendar attendance view
 - Transaction entry and transaction view
 - Reports, heatmap, and Excel download
 - Profile/logout
@@ -47,4 +47,6 @@ flutter build apk --release
 - Staff role and display details are stored with `shared_preferences`.
 - API endpoints are centralized in `lib/core/constants/api_constants.dart` and `lib/core/network/api_client.dart`.
 - The UI includes fallback content when backend responses are empty.
-- Family mapping currently searches members/house numbers and maps to a selected member's existing `familyId`, matching the backend APIs available in the first release.
+- Mark Attendance is shown to `SUPER_ADMIN`, `GENERAL_SECRETARY`, `JOINT_SECRETARY`, `ORG_SECRETARY`, and `SECRETARY`.
+- View Attendance is shown to all logged-in staff and highlights meeting dates in green.
+- Member Search opens a detail screen with selected member data, family details, family members, remove-from-family, and add-to-family actions.

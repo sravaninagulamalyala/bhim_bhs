@@ -9,4 +9,6 @@ import java.util.Optional;
 public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     List<Attendance> findByMeetingId(Long meetingId);
     Optional<Attendance> findByMeetingIdAndMemberId(Long meetingId, Long memberId);
+    long countByMeetingIdAndAttendedTrue(Long meetingId);
+    long countByMeetingId(Long meetingId);
 }
