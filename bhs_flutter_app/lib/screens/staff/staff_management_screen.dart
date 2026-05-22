@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/storage/auth_store.dart';
+import '../../core/utils/loading_helper.dart';
 import '../../core/widgets/common_widgets.dart';
 
 class StaffManagementScreen extends StatefulWidget {
@@ -36,6 +37,7 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
 
   Future<void> _memberSearch() async {
     setState(() => searchingMembers = true);
+    LoadingHelper.show(context);
     try {
       final data = await api.get('/members/search', query: {'keyword': search.text.trim()});
       setState(() {
@@ -48,6 +50,7 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
+      if (mounted) LoadingHelper.hide(context);
       if (mounted) setState(() => searchingMembers = false);
     }
   }
@@ -70,6 +73,7 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
       return;
     }
     setState(() => loading = true);
+    LoadingHelper.show(context);
     try {
       await api.post('/admin/staff/create', body: {
         'memberId': selectedMemberId,
@@ -87,6 +91,7 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
+      if (mounted) LoadingHelper.hide(context);
       if (mounted) setState(() => loading = false);
     }
   }
@@ -98,9 +103,8 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
       body: ListView(padding: const EdgeInsets.all(16), children: [
         Row(children: [
           Expanded(child: TextField(controller: search, decoration: const InputDecoration(labelText: 'Search member by name/mobile'))),
-          IconButton.filled(onPressed: searchingMembers ? null : _memberSearch, icon: searchingMembers ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.search)),
+          IconButton.filled(onPressed: searchingMembers ? null : _memberSearch, icon: const Icon(Icons.search)),
         ]),
-        if (searchingMembers) const LinearProgressIndicator(),
         for (final m in members.take(5))
           if (_id(m) != null)
           RadioListTile<int>(

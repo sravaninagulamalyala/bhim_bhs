@@ -56,3 +56,7 @@ flutter build apk --release --build-name=1.0.0 --build-number=1
 - Member Search also includes Update, available to logged-in staff.
 - Family Mapping searches family code, house number, family head name, member name, or mobile number and maps after confirmation.
 - Reports include richer family Excel files and a Download All Members option.
+- API calls and long operations use the global non-dismissible Ambedkar loading popup.
+- The left drawer header is removed and only clean role-based menu options are shown.
+- Splash, Home, and the loading popup use the shared `AmbedkarImage` widget.
+- Ambedkar image containers blend with the scaffold background and use `BoxFit.contain`.

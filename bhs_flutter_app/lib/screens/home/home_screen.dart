@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/network/api_client.dart';
 import '../../core/storage/auth_store.dart';
+import '../../core/widgets/ambedkar_image.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../auth/login_screen.dart';
 import '../member_registration/member_registration_screen.dart';
@@ -61,22 +62,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.all(16),
                 children: [
                   if (error != null) ErrorText(error!),
-                  Center(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.asset(
-                        'assets/images/ambedkar.jpg',
-                        height: 160,
-                        width: 160,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          height: 160,
-                          width: 160,
-                          color: Colors.blue.shade50,
-                          child: const Icon(Icons.account_balance, size: 72, color: Color(0xFF0D47A1)),
-                        ),
-                      ),
-                    ),
+                  const Center(
+                    child: AmbedkarImage(size: 160, rounded: false, showShadow: true),
                   ),
                   const SizedBox(height: 16),
                   Text(title, textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),

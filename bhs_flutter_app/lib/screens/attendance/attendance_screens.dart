@@ -5,6 +5,7 @@ import 'package:table_calendar/table_calendar.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/storage/auth_store.dart';
+import '../../core/utils/loading_helper.dart';
 import '../../core/widgets/common_widgets.dart';
 
 String _date(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
@@ -26,12 +27,14 @@ class _AttendanceMeetingScreenState extends State<AttendanceMeetingScreen> {
   Future<void> _create() async {
     if (title.text.trim().isEmpty) return showSnack(context, 'Meeting title is required');
     setState(() => loading = true);
+    LoadingHelper.show(context);
     try {
       await ApiClient(context.read<AuthStore>()).post('/attendance/meeting', body: {'meetingDate': _date(date), 'title': title.text.trim(), 'remarks': remarks.text.trim()});
       if (mounted) showSnack(context, 'Meeting created');
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
+      if (mounted) LoadingHelper.hide(context);
       if (mounted) setState(() => loading = false);
     }
   }
@@ -94,18 +97,21 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
 
   Future<void> _loadMeeting() async {
     setState(() => checkingMeeting = true);
+    LoadingHelper.show(context);
     try {
       final data = await ApiClient(context.read<AuthStore>()).get('/attendance/meeting-by-date', query: {'date': _date(selectedDate)});
       setState(() => meeting = data is Map ? Map<String, dynamic>.from(data) : null);
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
+      if (mounted) LoadingHelper.hide(context);
       if (mounted) setState(() => checkingMeeting = false);
     }
   }
 
   Future<void> _createMeeting() async {
     setState(() => creatingMeeting = true);
+    LoadingHelper.show(context);
     try {
       final data = await ApiClient(context.read<AuthStore>()).post('/attendance/meeting', body: {'meetingDate': _date(selectedDate), 'title': 'Monthly Meeting', 'remarks': 'General meeting'});
       setState(() => meeting = _meetingMap(data));
@@ -113,6 +119,7 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
+      if (mounted) LoadingHelper.hide(context);
       if (mounted) setState(() => creatingMeeting = false);
     }
   }
@@ -120,12 +127,14 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
   Future<void> _search() async {
     if (meeting == null) return showSnack(context, 'Create or load a meeting first');
     setState(() => searching = true);
+    LoadingHelper.show(context);
     try {
       final data = await ApiClient(context.read<AuthStore>()).get('/search/members', query: {'keyword': keyword.text.trim()});
       setState(() => members = data is List ? data : []);
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
+      if (mounted) LoadingHelper.hide(context);
       if (mounted) setState(() => searching = false);
     }
   }
@@ -136,12 +145,14 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
     final items = marked.entries.map((e) => {'memberId': e.key, 'attended': e.value}).toList();
     if (items.isEmpty) return showSnack(context, 'Mark at least one member');
     setState(() => saving = true);
+    LoadingHelper.show(context);
     try {
       await ApiClient(context.read<AuthStore>()).post('/attendance/mark', body: {'meetingId': meetingId, 'attendanceList': items});
       if (mounted) showSnack(context, 'Attendance saved');
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
+      if (mounted) LoadingHelper.hide(context);
       if (mounted) setState(() => saving = false);
     }
   }
@@ -159,7 +170,6 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
                 trailing: const Icon(Icons.calendar_month),
                 onTap: _pickDate,
               ),
-              if (checkingMeeting) const LinearProgressIndicator(),
               if (!checkingMeeting && meeting == null) ...[
                 const SizedBox(height: 8),
                 PrimaryButton(label: 'Create Meeting for Selected Date', loading: creatingMeeting, onPressed: _createMeeting),
@@ -170,14 +180,13 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
                 Row(children: [
                   Expanded(child: TextField(controller: keyword, decoration: const InputDecoration(labelText: 'Search members'))),
                   const SizedBox(width: 8),
-                  IconButton.filled(onPressed: searching ? null : _search, icon: searching ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.search)),
+                  IconButton.filled(onPressed: searching ? null : _search, icon: const Icon(Icons.search)),
                 ]),
                 const SizedBox(height: 8),
                 PrimaryButton(label: 'Save Attendance', loading: saving, onPressed: _save),
               ],
             ]),
           ),
-          if (searching) const LinearProgressIndicator(),
           Expanded(
             child: meeting == null
                 ? const EmptyView('Select a date and create a meeting to mark attendance')
@@ -240,6 +249,7 @@ class _ViewAttendanceScreenState extends State<ViewAttendanceScreen> {
 
   Future<void> _loadMeetingDates(DateTime month) async {
     setState(() => loadingDates = true);
+    LoadingHelper.show(context);
     try {
       final data = await ApiClient(context.read<AuthStore>()).get('/attendance/meeting-dates', query: {'month': _month(month)});
       final next = <DateTime, Map<String, dynamic>>{};
@@ -258,6 +268,7 @@ class _ViewAttendanceScreenState extends State<ViewAttendanceScreen> {
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
+      if (mounted) LoadingHelper.hide(context);
       if (mounted) setState(() => loadingDates = false);
     }
   }
@@ -268,12 +279,14 @@ class _ViewAttendanceScreenState extends State<ViewAttendanceScreen> {
       return;
     }
     setState(() => loadingDetails = true);
+    LoadingHelper.show(context);
     try {
       final data = await ApiClient(context.read<AuthStore>()).get('/attendance/by-date', query: {'date': _date(date)});
       setState(() => attendance = data is Map ? Map<String, dynamic>.from(data) : null);
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
+      if (mounted) LoadingHelper.hide(context);
       if (mounted) setState(() => loadingDetails = false);
     }
   }
@@ -309,7 +322,6 @@ class _ViewAttendanceScreenState extends State<ViewAttendanceScreen> {
             todayBuilder: (context, day, focused) => meetingsByDate.containsKey(_day(day)) ? _greenDay(day, outlined: true) : null,
           ),
         ),
-        if (loadingDates) const LinearProgressIndicator(),
         const SizedBox(height: 16),
         if (selectedSummary != null)
           Card(
@@ -322,7 +334,6 @@ class _ViewAttendanceScreenState extends State<ViewAttendanceScreen> {
               ]),
             ),
           ),
-        if (loadingDetails) const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator())),
         if (!loadingDetails && selectedSummary == null) const EmptyView('Select a green date to view attendance'),
         if (!loadingDetails && attendance != null) ...[
           const SizedBox(height: 8),

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/storage/auth_store.dart';
+import '../../core/utils/loading_helper.dart';
 import '../../core/widgets/common_widgets.dart';
 
 String _ym(DateTime d) => DateFormat('yyyy-MM').format(d);
@@ -30,6 +31,7 @@ class _TransactionEntryScreenState extends State<TransactionEntryScreen> {
 
   Future<void> _search() async {
     setState(() => searching = true);
+    LoadingHelper.show(context);
     try {
       final data = await ApiClient(context.read<AuthStore>()).get('/members/search', query: {'keyword': keyword.text.trim()});
       setState(() {
@@ -43,6 +45,7 @@ class _TransactionEntryScreenState extends State<TransactionEntryScreen> {
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
+      if (mounted) LoadingHelper.hide(context);
       if (mounted) setState(() => searching = false);
     }
   }
@@ -52,6 +55,7 @@ class _TransactionEntryScreenState extends State<TransactionEntryScreen> {
     final parsedAmount = num.tryParse(amount.text.trim());
     if (parsedAmount == null || parsedAmount <= 0) return showSnack(context, 'Enter a valid amount');
     setState(() => loading = true);
+    LoadingHelper.show(context);
     try {
       await ApiClient(context.read<AuthStore>()).post('/transactions', body: {
         'transactionDate': _date(date),
@@ -67,6 +71,7 @@ class _TransactionEntryScreenState extends State<TransactionEntryScreen> {
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
+      if (mounted) LoadingHelper.hide(context);
       if (mounted) setState(() => loading = false);
     }
   }
@@ -97,8 +102,7 @@ class _TransactionEntryScreenState extends State<TransactionEntryScreen> {
                   })),
           if (type == 'CREDIT') ...[
             const SizedBox(height: 10),
-            Row(children: [Expanded(child: TextField(controller: keyword, decoration: const InputDecoration(labelText: 'Search family/member'))), IconButton.filled(onPressed: searching ? null : _search, icon: searching ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.search))]),
-            if (searching) const LinearProgressIndicator(),
+            Row(children: [Expanded(child: TextField(controller: keyword, decoration: const InputDecoration(labelText: 'Search family/member'))), IconButton.filled(onPressed: searching ? null : _search, icon: const Icon(Icons.search))]),
             for (final m in members.take(4))
               if (_id(m) != null)
                 RadioListTile<int>(

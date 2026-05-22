@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/storage/auth_store.dart';
+import '../../core/utils/loading_helper.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../dashboard/dashboard_screen.dart';
 
@@ -23,6 +24,7 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
   Future<void> _login() async {
     if (!formKey.currentState!.validate()) return;
     setState(() => loading = true);
+    LoadingHelper.show(context);
     try {
       final auth = context.read<AuthStore>();
       final data = await ApiClient(auth).post('/auth/login', body: {
@@ -41,6 +43,7 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
+      if (mounted) LoadingHelper.hide(context);
       if (mounted) setState(() => loading = false);
     }
   }

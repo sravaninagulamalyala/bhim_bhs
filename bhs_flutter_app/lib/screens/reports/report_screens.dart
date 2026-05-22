@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/storage/auth_store.dart';
+import '../../core/utils/loading_helper.dart';
 import '../../core/widgets/common_widgets.dart';
 
 String _ym(DateTime d) => DateFormat('yyyy-MM').format(d);
@@ -51,6 +52,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   Future<void> _download(String type) async {
+    LoadingHelper.show(context);
     try {
       final bytes = await ApiClient(context.read<AuthStore>()).download('/reports/download', query: {'type': type, 'month': _ym(month)});
       final dir = await getApplicationDocumentsDirectory();
@@ -59,10 +61,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
       await OpenFilex.open(file.path);
     } catch (e) {
       if (mounted) showSnack(context, '$e');
+    } finally {
+      if (mounted) LoadingHelper.hide(context);
     }
   }
 
   Future<void> _downloadMembers() async {
+    LoadingHelper.show(context);
     try {
       final bytes = await ApiClient(context.read<AuthStore>()).download('/reports/download-members');
       final dir = await getApplicationDocumentsDirectory();
@@ -71,6 +76,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
       await OpenFilex.open(file.path);
     } catch (e) {
       if (mounted) showSnack(context, '$e');
+    } finally {
+      if (mounted) LoadingHelper.hide(context);
     }
   }
 

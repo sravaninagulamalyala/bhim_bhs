@@ -87,6 +87,10 @@ flutter run --dart-define=BHS_API_BASE_URL=https://api.meghaconnect.cloud/api/v1
 - Report downloads now include family head name, family member names, mobile numbers, contribution status, contribution amount, month, and remarks.
 - Reports include `Download All Members`.
 - All logged-in staff can update member details from the Search module.
+- Flutter uses a global non-dismissible Ambedkar loading popup for API calls and long save/download operations.
+- The drawer header was removed; the left menu now shows only role-based menu options.
+- Ambedkar images now use a shared `AmbedkarImage` widget so Splash, Home, and loading states share the same background-blending treatment.
+- Ambedkar image containers use `BoxFit.contain`, rounded backgrounds that match the scaffold, and avoid visible texture boundaries.
 
 Key backend endpoints:
 

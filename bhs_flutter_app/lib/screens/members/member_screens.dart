@@ -5,6 +5,7 @@ import 'dart:io';
 
 import '../../core/network/api_client.dart';
 import '../../core/storage/auth_store.dart';
+import '../../core/utils/loading_helper.dart';
 import '../../core/widgets/common_widgets.dart';
 
 class ExcelUploadScreen extends StatefulWidget {
@@ -25,12 +26,14 @@ class _ExcelUploadScreenState extends State<ExcelUploadScreen> {
   Future<void> _upload() async {
     if (file == null) return showSnack(context, 'Choose Excel file first');
     setState(() => loading = true);
+    LoadingHelper.show(context);
     try {
       await ApiClient(context.read<AuthStore>()).multipart('/admin/members/upload-excel', file!, 'file');
       if (mounted) showSnack(context, 'Excel uploaded successfully');
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
+      if (mounted) LoadingHelper.hide(context);
       if (mounted) setState(() => loading = false);
     }
   }
@@ -62,12 +65,14 @@ class _MemberUpdateScreenState extends State<MemberUpdateScreen> {
 
   Future<void> _search() async {
     setState(() => loading = true);
+    LoadingHelper.show(context);
     try {
       final data = await ApiClient(context.read<AuthStore>()).get('/members/search', query: {'keyword': keyword.text.trim()});
       setState(() => members = data is List ? data : []);
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
+      if (mounted) LoadingHelper.hide(context);
       if (mounted) setState(() => loading = false);
     }
   }
@@ -80,10 +85,9 @@ class _MemberUpdateScreenState extends State<MemberUpdateScreen> {
             padding: const EdgeInsets.all(16),
             child: Row(children: [
               Expanded(child: TextField(controller: keyword, decoration: const InputDecoration(labelText: 'Search member'))),
-              IconButton.filled(onPressed: loading ? null : _search, icon: loading ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.search)),
+              IconButton.filled(onPressed: loading ? null : _search, icon: const Icon(Icons.search)),
             ]),
           ),
-          if (loading) const LinearProgressIndicator(),
           Expanded(
             child: members.isEmpty
                 ? const EmptyView('Search and select a member')
@@ -125,6 +129,7 @@ class _MemberEditScreenState extends State<MemberEditScreen> {
 
   Future<void> _save() async {
     setState(() => loading = true);
+    LoadingHelper.show(context);
     final body = {for (final e in c.entries) e.key: e.key == 'age' ? int.tryParse(e.value.text) : e.value.text.trim(), 'active': active};
     try {
       await ApiClient(context.read<AuthStore>()).put('/members/${widget.member['id']}', body: body);
@@ -135,6 +140,7 @@ class _MemberEditScreenState extends State<MemberEditScreen> {
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
+      if (mounted) LoadingHelper.hide(context);
       if (mounted) setState(() => loading = false);
     }
   }
@@ -176,6 +182,7 @@ class _FamilyMappingScreenState extends State<FamilyMappingScreen> {
 
   Future<void> _searchMembers() async {
     setState(() => searchingMembers = true);
+    LoadingHelper.show(context);
     try {
       final data = await ApiClient(context.read<AuthStore>()).get('/members/search', query: {'keyword': memberKeyword.text.trim()});
       setState(() {
@@ -188,12 +195,14 @@ class _FamilyMappingScreenState extends State<FamilyMappingScreen> {
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
+      if (mounted) LoadingHelper.hide(context);
       if (mounted) setState(() => searchingMembers = false);
     }
   }
 
   Future<void> _searchFamilies() async {
     setState(() => searchingFamilies = true);
+    LoadingHelper.show(context);
     try {
       final data = await ApiClient(context.read<AuthStore>()).get('/families/search', query: {'keyword': familyKeyword.text.trim()});
       setState(() {
@@ -206,6 +215,7 @@ class _FamilyMappingScreenState extends State<FamilyMappingScreen> {
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
+      if (mounted) LoadingHelper.hide(context);
       if (mounted) setState(() => searchingFamilies = false);
     }
   }
@@ -225,13 +235,16 @@ class _FamilyMappingScreenState extends State<FamilyMappingScreen> {
       ),
     );
     if (ok != true) return;
+    if (!mounted) return;
     setState(() => loading = true);
+    LoadingHelper.show(context);
     try {
       await api.post('/members/map-family', body: {'memberId': memberId, 'familyId': familyId});
       if (mounted) showSnack(context, 'Family mapped');
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
+      if (mounted) LoadingHelper.hide(context);
       if (mounted) setState(() => loading = false);
     }
   }
@@ -248,8 +261,7 @@ class _FamilyMappingScreenState extends State<FamilyMappingScreen> {
   Widget build(BuildContext context) => AppScaffold(
         title: 'Family Mapping',
         body: ListView(padding: const EdgeInsets.all(16), children: [
-          Row(children: [Expanded(child: TextField(controller: memberKeyword, decoration: const InputDecoration(labelText: 'Search member by name / mobile / house'))), IconButton.filled(onPressed: searchingMembers ? null : _searchMembers, icon: searchingMembers ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.search))]),
-          if (searchingMembers) const LinearProgressIndicator(),
+          Row(children: [Expanded(child: TextField(controller: memberKeyword, decoration: const InputDecoration(labelText: 'Search member by name / mobile / house'))), IconButton.filled(onPressed: searchingMembers ? null : _searchMembers, icon: const Icon(Icons.search))]),
           for (final m in members.take(4))
             if (_id(m) != null)
               RadioListTile<int>(
@@ -272,8 +284,7 @@ class _FamilyMappingScreenState extends State<FamilyMappingScreen> {
           const Divider(),
           const Text('Search Family / Family Members to Map', style: TextStyle(fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
-          Row(children: [Expanded(child: TextField(controller: familyKeyword, decoration: const InputDecoration(labelText: 'Family code / house / head / member / mobile'))), IconButton.filled(onPressed: searchingFamilies ? null : _searchFamilies, icon: searchingFamilies ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.search))]),
-          if (searchingFamilies) const LinearProgressIndicator(),
+          Row(children: [Expanded(child: TextField(controller: familyKeyword, decoration: const InputDecoration(labelText: 'Family code / house / head / member / mobile'))), IconButton.filled(onPressed: searchingFamilies ? null : _searchFamilies, icon: const Icon(Icons.search))]),
           for (final f in familyCandidates)
             if (_familyId(f) != null)
               Card(

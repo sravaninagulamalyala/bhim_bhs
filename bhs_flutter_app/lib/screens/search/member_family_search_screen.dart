@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/storage/auth_store.dart';
+import '../../core/utils/loading_helper.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../members/member_screens.dart';
 
@@ -27,12 +28,14 @@ class _MemberSearchScreenState extends State<MemberSearchScreen> {
 
   Future<void> _search() async {
     setState(() => loading = true);
+    LoadingHelper.show(context);
     try {
       final data = await ApiClient(context.read<AuthStore>()).get('/search/members', query: {'keyword': keyword.text.trim()});
       setState(() => members = data is List ? data : []);
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
+      if (mounted) LoadingHelper.hide(context);
       if (mounted) setState(() => loading = false);
     }
   }
@@ -46,10 +49,9 @@ class _MemberSearchScreenState extends State<MemberSearchScreen> {
             child: Row(children: [
               Expanded(child: TextField(controller: keyword, decoration: const InputDecoration(labelText: 'Name / mobile / house / family code'))),
               const SizedBox(width: 8),
-              IconButton.filled(onPressed: loading ? null : _search, icon: loading ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.search)),
+              IconButton.filled(onPressed: loading ? null : _search, icon: const Icon(Icons.search)),
             ]),
           ),
-          if (loading) const LinearProgressIndicator(),
           Expanded(
             child: members.isEmpty
                 ? const EmptyView('Search members to view details')
@@ -71,13 +73,17 @@ class _MemberResultCard extends StatelessWidget {
     final id = member['id'];
     if (id is! num) return;
     try {
+      LoadingHelper.show(context);
       final data = await ApiClient(context.read<AuthStore>()).get('/members/${id.toInt()}/details');
       final detailMember = data is Map && data['member'] is Map ? Map<String, dynamic>.from(data['member']) : member;
       if (!context.mounted) return;
+      LoadingHelper.hide(context);
       await Navigator.push(context, MaterialPageRoute(builder: (_) => MemberEditScreen(member: detailMember)));
       onUpdated();
     } catch (e) {
       if (context.mounted) showSnack(context, '$e');
+    } finally {
+      if (context.mounted) LoadingHelper.hide(context);
     }
   }
 
@@ -139,12 +145,14 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
 
   Future<void> _load() async {
     setState(() => loading = true);
+    LoadingHelper.show(context);
     try {
       final data = await ApiClient(context.read<AuthStore>()).get('/members/${widget.memberId}/details');
       setState(() => details = data is Map ? Map<String, dynamic>.from(data) : null);
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
+      if (mounted) LoadingHelper.hide(context);
       if (mounted) setState(() => loading = false);
     }
   }
@@ -157,7 +165,9 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
     final api = ApiClient(context.read<AuthStore>());
     final ok = await _confirm();
     if (!ok) return;
+    if (!mounted) return;
     setState(() => saving = true);
+    LoadingHelper.show(context);
     try {
       await api.post('/members/family/remove', body: {'memberId': memberId, 'familyId': familyId});
       if (mounted) showSnack(context, 'Family mapping updated');
@@ -165,6 +175,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
+      if (mounted) LoadingHelper.hide(context);
       if (mounted) setState(() => saving = false);
     }
   }
@@ -270,12 +281,14 @@ class _FamilyMemberCorrectionScreenState extends State<FamilyMemberCorrectionScr
 
   Future<void> _search() async {
     setState(() => loading = true);
+    LoadingHelper.show(context);
     try {
       final data = await ApiClient(context.read<AuthStore>()).get('/search/members', query: {'keyword': keyword.text.trim()});
       setState(() => members = data is List ? data : []);
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
+      if (mounted) LoadingHelper.hide(context);
       if (mounted) setState(() => loading = false);
     }
   }
@@ -296,7 +309,9 @@ class _FamilyMemberCorrectionScreenState extends State<FamilyMemberCorrectionScr
       ),
     );
     if (ok != true) return;
+    if (!mounted) return;
     setState(() => saving = true);
+    LoadingHelper.show(context);
     try {
       await api.post('/members/family/add', body: {'memberId': memberId, 'targetFamilyId': widget.targetFamilyId});
       if (mounted) showSnack(context, 'Family mapping updated');
@@ -304,6 +319,7 @@ class _FamilyMemberCorrectionScreenState extends State<FamilyMemberCorrectionScr
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
+      if (mounted) LoadingHelper.hide(context);
       if (mounted) setState(() => saving = false);
     }
   }
@@ -317,10 +333,9 @@ class _FamilyMemberCorrectionScreenState extends State<FamilyMemberCorrectionScr
             child: Row(children: [
               Expanded(child: TextField(controller: keyword, decoration: const InputDecoration(labelText: 'Search member'))),
               const SizedBox(width: 8),
-              IconButton.filled(onPressed: loading ? null : _search, icon: loading ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.search)),
+              IconButton.filled(onPressed: loading ? null : _search, icon: const Icon(Icons.search)),
             ]),
           ),
-          if (loading || saving) const LinearProgressIndicator(),
           Expanded(
             child: members.isEmpty
                 ? const EmptyView('Search and select a member')

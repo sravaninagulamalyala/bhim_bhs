@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/storage/auth_store.dart';
+import '../../core/utils/loading_helper.dart';
 import '../../core/widgets/common_widgets.dart';
 
 class MemberRegistrationScreen extends StatefulWidget {
@@ -21,6 +22,7 @@ class _MemberRegistrationScreenState extends State<MemberRegistrationScreen> {
   Future<void> _submit() async {
     if (!formKey.currentState!.validate()) return;
     setState(() => loading = true);
+    LoadingHelper.show(context);
     try {
       await ApiClient(context.read<AuthStore>()).post('/public/member-registration', body: {
         'mainMember': main.toJson(),
@@ -32,6 +34,7 @@ class _MemberRegistrationScreenState extends State<MemberRegistrationScreen> {
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
+      if (mounted) LoadingHelper.hide(context);
       if (mounted) setState(() => loading = false);
     }
   }
