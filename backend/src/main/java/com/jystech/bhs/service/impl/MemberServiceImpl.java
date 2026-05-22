@@ -64,21 +64,64 @@ public class MemberServiceImpl implements MemberService {
     @Override
     public Member update(Long id, MemberDtos.MemberUpdateRequest request) {
         Member member = memberRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Member not found"));
-        if (request.firstName() != null) member.setFirstName(request.firstName());
-        if (request.lastName() != null) member.setLastName(request.lastName());
-        member.setFullName(((member.getFirstName() == null ? "" : member.getFirstName()) + " " + (member.getLastName() == null ? "" : member.getLastName())).trim());
-        if (request.fatherOrHusbandName() != null) member.setFatherOrHusbandName(request.fatherOrHusbandName());
-        if (request.relationType() != null) member.setRelationType(request.relationType());
-        if (request.age() != null) member.setAge(request.age());
-        if (request.sex() != null) member.setSex(request.sex());
-        if (request.mobileNo() != null) member.setMobileNo(request.mobileNo());
-        if (request.alternateMobileNo() != null) member.setAlternateMobileNo(request.alternateMobileNo());
-        if (request.address() != null) member.setAddress(request.address());
-        if (request.houseNo() != null) member.setHouseNo(request.houseNo());
-        if (request.area() != null) member.setArea(request.area());
-        if (request.active() != null) member.setActive(request.active());
+        List<String> updated = new ArrayList<>();
+        if (request.firstName() != null) {
+            member.setFirstName(request.firstName());
+            updated.add("firstName");
+        }
+        if (request.lastName() != null) {
+            member.setLastName(request.lastName());
+            updated.add("lastName");
+        }
+        if (request.fullName() != null && !request.fullName().isBlank()) {
+            member.setFullName(request.fullName().trim());
+            updated.add("fullName");
+        } else if (request.firstName() != null || request.lastName() != null) {
+            member.setFullName(((member.getFirstName() == null ? "" : member.getFirstName()) + " " + (member.getLastName() == null ? "" : member.getLastName())).trim());
+            updated.add("fullName");
+        }
+        if (request.fatherOrHusbandName() != null) {
+            member.setFatherOrHusbandName(request.fatherOrHusbandName());
+            updated.add("fatherOrHusbandName");
+        }
+        if (request.relationType() != null) {
+            member.setRelationType(request.relationType());
+            updated.add("relationType");
+        }
+        if (request.age() != null) {
+            member.setAge(request.age());
+            updated.add("age");
+        }
+        if (request.sex() != null) {
+            member.setSex(request.sex());
+            updated.add("sex");
+        }
+        if (request.mobileNo() != null) {
+            member.setMobileNo(request.mobileNo());
+            updated.add("mobileNo");
+        }
+        if (request.alternateMobileNo() != null) {
+            member.setAlternateMobileNo(request.alternateMobileNo());
+            updated.add("alternateMobileNo");
+        }
+        if (request.address() != null) {
+            member.setAddress(request.address());
+            updated.add("address");
+        }
+        if (request.houseNo() != null) {
+            member.setHouseNo(request.houseNo());
+            updated.add("houseNo");
+        }
+        if (request.area() != null) {
+            member.setArea(request.area());
+            updated.add("area");
+        }
+        if (request.active() != null) {
+            member.setActive(request.active());
+            updated.add("active");
+        }
         Member saved = memberRepository.save(member);
-        auditService.log("UPDATE", "MEMBER", "Updated member id: " + id);
+        auditService.log("UPDATE_MEMBER", "MEMBER", "Updated memberId: " + id + ", fields: " + String.join(", ", updated));
         return saved;
     }
 

@@ -52,4 +52,12 @@ public class ReportController {
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(new InputStreamResource(reportService.download(type, month)));
     }
+
+    @GetMapping("/download-members")
+    public ResponseEntity<InputStreamResource> downloadMembers() {
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=bhs-all-members.xlsx")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new InputStreamResource(reportService.downloadMembers()));
+    }
 }

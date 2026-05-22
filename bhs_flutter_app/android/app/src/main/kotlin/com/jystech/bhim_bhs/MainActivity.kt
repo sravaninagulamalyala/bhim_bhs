@@ -1,4 +1,4 @@
-package com.jystech.bhs_flutter_app
+package com.jystech.bhim_bhs
 
 import io.flutter.embedding.android.FlutterActivity
 

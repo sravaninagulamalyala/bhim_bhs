@@ -24,4 +24,12 @@ public interface TransactionRepository extends JpaRepository<TransactionRecord, 
               and t.transactionDate between :start and :end
             """)
     List<Long> contributedFamilyIds(@Param("start") LocalDate start, @Param("end") LocalDate end);
+
+    @Query("""
+            select coalesce(sum(t.amount), 0) from TransactionRecord t
+            where t.transactionType = com.jystech.bhs.entity.TransactionType.CREDIT
+              and t.familyId = :familyId
+              and t.transactionDate between :start and :end
+            """)
+    BigDecimal contributionAmount(@Param("familyId") Long familyId, @Param("start") LocalDate start, @Param("end") LocalDate end);
 }

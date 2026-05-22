@@ -11,8 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
-
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
@@ -23,9 +21,6 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthDtos.LoginResponse login(AuthDtos.LoginRequest request) {
-        if (request.captcha() != null && !"1234".equals(request.captcha())) {
-            throw new BadRequestException("Invalid captcha");
-        }
         Staff staff = staffRepository.findByAdminId(request.adminId())
                 .filter(Staff::isActive)
                 .orElseThrow(() -> new BadRequestException("Invalid credentials"));
@@ -38,6 +33,6 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthDtos.CaptchaResponse captcha() {
-        return new AuthDtos.CaptchaResponse(UUID.randomUUID().toString(), "1234");
+        return new AuthDtos.CaptchaResponse("", "");
     }
 }

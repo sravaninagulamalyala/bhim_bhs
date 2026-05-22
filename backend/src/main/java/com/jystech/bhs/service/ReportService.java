@@ -11,4 +11,5 @@ public interface ReportService {
     Map<String, Object> nonContributedFamilies(YearMonth month);
     Map<String, Object> heatmap(YearMonth month);
     ByteArrayInputStream download(String type, YearMonth month);
+    ByteArrayInputStream downloadMembers();
 }

@@ -3,7 +3,7 @@
 This repository contains both applications:
 
 - `backend/` - Java 17 Spring Boot REST API
-- `bhs_flutter_app/` - Flutter Android/iOS app
+- `bhs_flutter_app/` - Flutter Android/iOS app named `bhim_bhs`
 - `doc/` - source documents such as `Register-bhs.xlsx`
 
 ## Backend
@@ -65,7 +65,7 @@ curl https://api.meghaconnect.cloud/api/v1/public/home-content
 cd bhs_flutter_app
 flutter pub get
 flutter run
-flutter build apk --release
+flutter build apk --release --build-name=1.0.0 --build-number=1
 ```
 
 To override the backend URL:
@@ -82,6 +82,11 @@ flutter run --dart-define=BHS_API_BASE_URL=https://api.meghaconnect.cloud/api/v1
 - View Attendance uses a calendar; dates with meetings are highlighted green, and selecting a green date loads meeting details plus present and absent marked members.
 - Member Search supports name, mobile, house number, and family code. Results include a View action that opens member details, associated family details, and all family members.
 - Family correction actions allow logged-in staff to remove a wrongly tagged member or add/map another member to the selected family after confirmation.
+- Login no longer uses captcha; staff login sends only admin ID and password.
+- Family Mapping can search families by family code, house number, family head name, any family member name, or mobile number.
+- Report downloads now include family head name, family member names, mobile numbers, contribution status, contribution amount, month, and remarks.
+- Reports include `Download All Members`.
+- All logged-in staff can update member details from the Search module.
 
 Key backend endpoints:
 
@@ -91,6 +96,10 @@ Key backend endpoints:
 - `GET /attendance/meeting-dates?month=yyyy-MM`
 - `GET /attendance/by-date?date=yyyy-MM-dd`
 - `GET /search/members?keyword=`
+- `GET /families/search?keyword=`
 - `GET /members/{memberId}/details`
+- `PUT /members/{memberId}`
+- `POST /members/map-family`
 - `POST /members/family/remove`
 - `POST /members/family/add`
+- `GET /reports/download-members`

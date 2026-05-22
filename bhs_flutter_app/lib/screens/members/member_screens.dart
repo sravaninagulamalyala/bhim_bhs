@@ -117,7 +117,7 @@ class _MemberEditScreenState extends State<MemberEditScreen> {
   void initState() {
     super.initState();
     c = {
-      for (final k in ['firstName', 'lastName', 'fatherOrHusbandName', 'age', 'sex', 'mobileNo', 'alternateMobileNo', 'address', 'houseNo', 'area'])
+      for (final k in ['firstName', 'lastName', 'fullName', 'fatherOrHusbandName', 'age', 'sex', 'mobileNo', 'alternateMobileNo', 'address', 'houseNo', 'area'])
         k: TextEditingController(text: '${widget.member[k] ?? ''}')
     };
     active = widget.member['active'] != false;
@@ -195,9 +195,9 @@ class _FamilyMappingScreenState extends State<FamilyMappingScreen> {
   Future<void> _searchFamilies() async {
     setState(() => searchingFamilies = true);
     try {
-      final data = await ApiClient(context.read<AuthStore>()).get('/members/search', query: {'keyword': familyKeyword.text.trim()});
+      final data = await ApiClient(context.read<AuthStore>()).get('/families/search', query: {'keyword': familyKeyword.text.trim()});
       setState(() {
-        familyCandidates = data is List ? data.where((e) => e['familyId'] != null).toList() : [];
+        familyCandidates = data is List ? data : [];
         if (familyId != null && !familyCandidates.any((f) => _familyId(f) == familyId)) {
           familySource = null;
           familyId = null;
@@ -212,9 +212,22 @@ class _FamilyMappingScreenState extends State<FamilyMappingScreen> {
 
   Future<void> _map() async {
     if (memberId == null || familyId == null) return showSnack(context, 'Select member and family');
+    final api = ApiClient(context.read<AuthStore>());
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Confirm family mapping'),
+        content: const Text('Do you want to map this member to this family?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Map')),
+        ],
+      ),
+    );
+    if (ok != true) return;
     setState(() => loading = true);
     try {
-      await ApiClient(context.read<AuthStore>()).post('/members/map-family', body: {'memberId': memberId, 'familyId': familyId});
+      await api.post('/members/map-family', body: {'memberId': memberId, 'familyId': familyId});
       if (mounted) showSnack(context, 'Family mapped');
     } catch (e) {
       if (mounted) showSnack(context, '$e');
@@ -223,11 +236,19 @@ class _FamilyMappingScreenState extends State<FamilyMappingScreen> {
     }
   }
 
+  Future<void> _selectFamily(Map<String, dynamic> family) async {
+    setState(() {
+      familyId = _familyId(family);
+      familySource = family;
+    });
+    await _map();
+  }
+
   @override
   Widget build(BuildContext context) => AppScaffold(
         title: 'Family Mapping',
         body: ListView(padding: const EdgeInsets.all(16), children: [
-          Row(children: [Expanded(child: TextField(controller: memberKeyword, decoration: const InputDecoration(labelText: 'Search member'))), IconButton.filled(onPressed: searchingMembers ? null : _searchMembers, icon: searchingMembers ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.search))]),
+          Row(children: [Expanded(child: TextField(controller: memberKeyword, decoration: const InputDecoration(labelText: 'Search member by name / mobile / house'))), IconButton.filled(onPressed: searchingMembers ? null : _searchMembers, icon: searchingMembers ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.search))]),
           if (searchingMembers) const LinearProgressIndicator(),
           for (final m in members.take(4))
             if (_id(m) != null)
@@ -241,27 +262,45 @@ class _FamilyMappingScreenState extends State<FamilyMappingScreen> {
                   member = Map<String, dynamic>.from(m);
                 }),
               ),
-          const Divider(),
-          Row(children: [Expanded(child: TextField(controller: familyKeyword, decoration: const InputDecoration(labelText: 'Search/select family by member/house'))), IconButton.filled(onPressed: searchingFamilies ? null : _searchFamilies, icon: searchingFamilies ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.search))]),
-          if (searchingFamilies) const LinearProgressIndicator(),
-          for (final f in familyCandidates.take(4))
-            if (_familyId(f) != null)
-              RadioListTile<int>(
-                value: _familyId(f)!,
-                groupValue: familyId,
-                title: Text('Family ${f['familyId']} • ${f['houseNo'] ?? ''}'),
-                subtitle: Text('${f['fullName'] ?? ''}'),
-                onChanged: (v) => setState(() {
-                  familyId = v;
-                  familySource = Map<String, dynamic>.from(f);
-                }),
+          if (member != null)
+            Card(
+              child: ListTile(
+                title: Text('${member?['fullName'] ?? ''}'),
+                subtitle: Text('Mobile: ${member?['mobileNo'] ?? ''} • House: ${member?['houseNo'] ?? ''} • Current family: ${member?['familyId'] ?? '-'}'),
               ),
-          if (member != null) Text('Selected member: ${member?['fullName'] ?? ''}'),
-          if (familySource != null) Text('Selected family: ${familySource?['familyId'] ?? ''}'),
+            ),
+          const Divider(),
+          const Text('Search Family / Family Members to Map', style: TextStyle(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          Row(children: [Expanded(child: TextField(controller: familyKeyword, decoration: const InputDecoration(labelText: 'Family code / house / head / member / mobile'))), IconButton.filled(onPressed: searchingFamilies ? null : _searchFamilies, icon: searchingFamilies ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.search))]),
+          if (searchingFamilies) const LinearProgressIndicator(),
+          for (final f in familyCandidates)
+            if (_familyId(f) != null)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('${f['familyCode'] ?? 'Family ${f['familyId']}'}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text('Head: ${f['familyHeadName'] ?? ''}'),
+                    Text('House: ${f['houseNo'] ?? ''} • Area: ${f['area'] ?? ''}'),
+                    Text('Total Members: ${f['totalMembers'] ?? 0}'),
+                    Text('Members: ${_names(f['memberNames'])}'),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: FilledButton(
+                        onPressed: loading ? null : () => _selectFamily(Map<String, dynamic>.from(f)),
+                        child: const Text('Select Family'),
+                      ),
+                    ),
+                  ]),
+                ),
+              ),
+          if (familySource != null) Text('Selected family: ${familySource?['familyCode'] ?? familySource?['familyId'] ?? ''}'),
           PrimaryButton(label: 'Map Member to Family', loading: loading, onPressed: _map),
         ]),
       );
 
   int? _id(dynamic value) => value is Map && value['id'] is num ? (value['id'] as num).toInt() : null;
   int? _familyId(dynamic value) => value is Map && value['familyId'] is num ? (value['familyId'] as num).toInt() : null;
+  String _names(dynamic value) => value is List ? value.join(', ') : '';
 }

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/network/api_client.dart';
 import '../../core/storage/auth_store.dart';
 import '../../core/widgets/common_widgets.dart';
+import '../members/member_screens.dart';
 
 class MemberFamilySearchScreen extends StatelessWidget {
   const MemberFamilySearchScreen({super.key});
@@ -54,7 +55,7 @@ class _MemberSearchScreenState extends State<MemberSearchScreen> {
                 ? const EmptyView('Search members to view details')
                 : ListView.builder(
                     itemCount: members.length,
-                    itemBuilder: (_, i) => _MemberResultCard(member: Map<String, dynamic>.from(members[i])),
+                    itemBuilder: (_, i) => _MemberResultCard(member: Map<String, dynamic>.from(members[i]), onUpdated: _search),
                   ),
           ),
         ]),
@@ -62,8 +63,23 @@ class _MemberSearchScreenState extends State<MemberSearchScreen> {
 }
 
 class _MemberResultCard extends StatelessWidget {
-  const _MemberResultCard({required this.member});
+  const _MemberResultCard({required this.member, required this.onUpdated});
   final Map<String, dynamic> member;
+  final VoidCallback onUpdated;
+
+  Future<void> _edit(BuildContext context) async {
+    final id = member['id'];
+    if (id is! num) return;
+    try {
+      final data = await ApiClient(context.read<AuthStore>()).get('/members/${id.toInt()}/details');
+      final detailMember = data is Map && data['member'] is Map ? Map<String, dynamic>.from(data['member']) : member;
+      if (!context.mounted) return;
+      await Navigator.push(context, MaterialPageRoute(builder: (_) => MemberEditScreen(member: detailMember)));
+      onUpdated();
+    } catch (e) {
+      if (context.mounted) showSnack(context, '$e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) => Card(
@@ -76,16 +92,24 @@ class _MemberResultCard extends StatelessWidget {
             _line('Mobile', member['mobileNo']),
             _line('House No', member['houseNo']),
             _line('Family Code', member['familyCode'] ?? member['familyId']),
-            Align(
-              alignment: Alignment.centerRight,
-              child: FilledButton.icon(
-                onPressed: () {
-                  final id = member['id'];
-                  if (id is num) Navigator.push(context, MaterialPageRoute(builder: (_) => MemberDetailScreen(memberId: id.toInt())));
-                },
-                icon: const Icon(Icons.visibility),
-                label: const Text('View'),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () => _edit(context),
+                  icon: const Icon(Icons.edit),
+                  label: const Text('Update'),
+                ),
+                const SizedBox(width: 8),
+                FilledButton.icon(
+                  onPressed: () {
+                    final id = member['id'];
+                    if (id is num) Navigator.push(context, MaterialPageRoute(builder: (_) => MemberDetailScreen(memberId: id.toInt()))).then((_) => onUpdated());
+                  },
+                  icon: const Icon(Icons.visibility),
+                  label: const Text('View'),
+                ),
+              ],
             ),
           ]),
         ),

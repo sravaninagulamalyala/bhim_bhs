@@ -32,13 +32,11 @@ public class MemberController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SECRETARY','SUPER_ADMIN')")
     public ApiResponse<Member> update(@PathVariable Long id, @RequestBody MemberDtos.MemberUpdateRequest request) {
         return ApiResponse.message("Member updated", memberService.update(id, request));
     }
 
     @PostMapping("/map-family")
-    @PreAuthorize("hasAnyRole('SECRETARY','SUPER_ADMIN')")
     public ApiResponse<Member> mapFamily(@RequestBody MemberDtos.MapFamilyRequest request) {
         return ApiResponse.message("Family mapped", memberService.mapFamily(request));
     }

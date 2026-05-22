@@ -86,8 +86,16 @@ Public:
 
 Auth:
 
-- `GET /auth/captcha`
 - `POST /auth/login`
+
+Login no longer requires captcha. Request body:
+
+```json
+{
+  "adminId": "admin",
+  "password": "welcome"
+}
+```
 
 Admin:
 
@@ -130,11 +138,13 @@ Reports:
 - `GET /reports/non-contributed-families?month=2026-05`
 - `GET /reports/heatmap?month=2026-05`
 - `GET /reports/download?type=CONTRIBUTED&month=2026-05`
+- `GET /reports/download-members`
 
 Search:
 
 - `GET /search/member-family?keyword=`
 - `GET /search/members?keyword=`
+- `GET /families/search?keyword=`
 
 ## Attendance Flow
 
@@ -147,8 +157,16 @@ Search:
 
 - Logged-in staff can use `GET /search/members?keyword=` to search by name, mobile, house number, or family code.
 - `GET /members/{id}/details` returns the selected member, associated family, and all active family members.
+- `GET /families/search?keyword=` searches by family code, house number, family head name, family member name, or mobile number.
+- `POST /members/map-family` maps a selected member to a selected family and is available to logged-in staff.
 - `POST /members/family/remove` removes a member from a family after validation and audit logging.
 - `POST /members/family/add` maps a member to a target family after validation and audit logging.
+
+## Report Downloads
+
+- Family report Excel downloads include family head name, family code, house number, area, family member names, mobile numbers, contribution status, contribution amount, month, and remarks.
+- Family head name uses `primary_member_id` when present, otherwise the eldest active member by age, otherwise the first active member in that family.
+- `GET /reports/download-members` exports all members with member details, family head, family code, address, and active status.
 
 ## Excel Upload Notes
 
@@ -176,5 +194,5 @@ Mobile examples:
 - `SECRETARY`: member updates, family mapping, reports, attendance meeting creation and attendance marking/updating
 - `SUPER_ADMIN`, `GENERAL_SECRETARY`, `JOINT_SECRETARY`, `ORG_SECRETARY`, `SECRETARY`: attendance meeting creation and attendance marking/updating
 - `TREASURER`: credit/debit transaction creation/updating and transaction reports
-- Logged-in staff: attendance view, transaction view, member search, family correction actions, report download
+- Logged-in staff: attendance view, transaction view, member search, member detail update, family mapping/correction actions, report download
 - Public: home, member registration, active family/member counts

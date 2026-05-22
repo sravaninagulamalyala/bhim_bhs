@@ -13,7 +13,7 @@ public class MemberDtos {
                               String mobileNo, String address) {}
     public record StaffCreateRequest(Long memberId, String adminId, String password, UserRole role, boolean active) {}
     public record StaffUpdateRequest(String password, UserRole role, Boolean active, Long memberId, String fullName, String mobileNo) {}
-    public record MemberUpdateRequest(String firstName, String lastName, String fatherOrHusbandName, String relationType,
+    public record MemberUpdateRequest(String firstName, String lastName, String fullName, String fatherOrHusbandName, String relationType,
                                       Integer age, String sex, String mobileNo, String alternateMobileNo, String address,
                                       String houseNo, String area, Boolean active) {}
     public record MapFamilyRequest(Long memberId, Long familyId) {}
@@ -21,4 +21,6 @@ public class MemberDtos {
     public record AddFamilyRequest(Long memberId, Long targetFamilyId) {}
     public record MemberFamilyResponse(Object member, List<?> familyMembers) {}
     public record MemberDetailsResponse(Object member, Object family, List<?> familyMembers) {}
+    public record FamilySearchResponse(Long familyId, String familyCode, String familyHeadName, String houseNo, String area,
+                                       int totalMembers, List<String> memberNames) {}
 }

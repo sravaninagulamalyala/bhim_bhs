@@ -43,8 +43,8 @@ public class SecurityConfig {
                         .hasAnyRole("SUPER_ADMIN", "GENERAL_SECRETARY", "JOINT_SECRETARY", "ORG_SECRETARY", "SECRETARY")
                         .requestMatchers(HttpMethod.PUT, "/attendance/**")
                         .hasAnyRole("SUPER_ADMIN", "GENERAL_SECRETARY", "JOINT_SECRETARY", "ORG_SECRETARY", "SECRETARY")
-                        .requestMatchers(HttpMethod.POST, "/transactions").hasRole("TREASURER")
-                        .requestMatchers(HttpMethod.PUT, "/transactions/**").hasRole("TREASURER")
+                        .requestMatchers(HttpMethod.POST, "/transactions").hasAnyRole("TREASURER", "SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/transactions/**").hasAnyRole("TREASURER", "SUPER_ADMIN")
                         .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

@@ -5,7 +5,7 @@ class Roles {
   static bool isJointSecretary(String? role) => role == 'JOINT_SECRETARY';
   static bool isOrgSecretary(String? role) => role == 'ORG_SECRETARY';
   static bool isTreasurer(String? role) => role == 'TREASURER';
-  static bool canUpdateMembers(String? role) => isSuperAdmin(role) || isSecretary(role);
+  static bool canUpdateMembers(String? role) => role != null && role.isNotEmpty;
   static bool canManageAttendance(String? role) => isSuperAdmin(role) || isGeneralSecretary(role) || isJointSecretary(role) || isOrgSecretary(role) || isSecretary(role);
-  static bool canManageTransactions(String? role) => isTreasurer(role);
+  static bool canManageTransactions(String? role) => isTreasurer(role) || isSuperAdmin(role);
 }

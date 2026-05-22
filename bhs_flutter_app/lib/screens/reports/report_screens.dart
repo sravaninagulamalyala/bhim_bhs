@@ -62,6 +62,18 @@ class _ReportsScreenState extends State<ReportsScreen> {
     }
   }
 
+  Future<void> _downloadMembers() async {
+    try {
+      final bytes = await ApiClient(context.read<AuthStore>()).download('/reports/download-members');
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/bhs_all_members.xlsx');
+      await file.writeAsBytes(bytes);
+      await OpenFilex.open(file.path);
+    } catch (e) {
+      if (mounted) showSnack(context, '$e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) => AppScaffold(
         title: 'Reports',
@@ -79,6 +91,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 OutlinedButton(onPressed: () => _download('CONTRIBUTED'), child: const Text('Download Contributed Family List')),
                 OutlinedButton(onPressed: () => _download('NON_CONTRIBUTED'), child: const Text('Download Non-Contributed Family List')),
                 OutlinedButton(onPressed: () => _download('ALL'), child: const Text('Download All Family List')),
+                OutlinedButton(onPressed: _downloadMembers, child: const Text('Download All Members')),
               ]),
       );
 

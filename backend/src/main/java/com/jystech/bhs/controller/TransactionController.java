@@ -20,7 +20,7 @@ public class TransactionController {
     private final TransactionService transactionService;
 
     @PostMapping
-    @PreAuthorize("hasRole('TREASURER')")
+    @PreAuthorize("hasAnyRole('TREASURER','SUPER_ADMIN')")
     public ApiResponse<TransactionRecord> create(@RequestBody TransactionDtos.TransactionRequest request) {
         return ApiResponse.message("Transaction saved", transactionService.create(request));
     }
