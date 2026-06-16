@@ -12,6 +12,7 @@ import '../../screens/search/member_family_search_screen.dart';
 import '../../screens/transactions/transaction_screens.dart';
 import '../storage/auth_store.dart';
 import '../utils/roles.dart';
+import 'ambedkar_loading_dialog.dart';
 
 class AppScaffold extends StatelessWidget {
   const AppScaffold({super.key, required this.title, required this.body, this.actions});
@@ -71,7 +72,7 @@ class BhsDrawer extends StatelessWidget {
 class LoadingView extends StatelessWidget {
   const LoadingView({super.key});
   @override
-  Widget build(BuildContext context) => const Center(child: Text('Loading...'));
+  Widget build(BuildContext context) => const Center(child: AmbedkarLoadingContent());
 }
 
 class ErrorText extends StatelessWidget {

@@ -25,6 +25,7 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
     if (!formKey.currentState!.validate()) return;
     setState(() => loading = true);
     LoadingHelper.show(context);
+    var navigated = false;
     try {
       final auth = context.read<AuthStore>();
       final data = await ApiClient(auth).post('/auth/login', body: {
@@ -39,11 +40,13 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
         adminId: '${staff['adminId'] ?? adminId.text}',
       );
       if (!mounted) return;
+      LoadingHelper.hide(context);
+      navigated = true;
       Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const DashboardScreen()), (_) => false);
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
-      if (mounted) LoadingHelper.hide(context);
+      if (mounted && !navigated) LoadingHelper.hide(context);
       if (mounted) setState(() => loading = false);
     }
   }

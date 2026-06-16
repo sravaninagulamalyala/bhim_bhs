@@ -40,19 +40,47 @@ class _AmbedkarLoadingDialogState extends State<AmbedkarLoadingDialog> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(28, 26, 28, 22),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          child: AmbedkarLoadingContent(dots: dots),
+        ),
+      ),
+    );
+  }
+}
+
+class AmbedkarLoadingContent extends StatelessWidget {
+  const AmbedkarLoadingContent({super.key, this.dots = 3});
+
+  final int dots;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          height: 132,
+          width: 132,
+          child: Stack(
+            alignment: Alignment.center,
             children: [
-              const AmbedkarImage(size: 112, showShadow: true),
-              const SizedBox(height: 18),
-              Text(
-                'Loading${'.' * dots}',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              SizedBox(
+                height: 132,
+                width: 132,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
+              const AmbedkarImage(size: 112, showShadow: true),
             ],
           ),
         ),
-      ),
+        const SizedBox(height: 18),
+        Text(
+          'Loading${'.' * dots}',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+        ),
+      ],
     );
   }
 }
