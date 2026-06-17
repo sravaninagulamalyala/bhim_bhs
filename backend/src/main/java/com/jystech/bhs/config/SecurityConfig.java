@@ -43,6 +43,8 @@ public class SecurityConfig {
                         .hasAnyRole("SUPER_ADMIN", "GENERAL_SECRETARY", "JOINT_SECRETARY", "ORG_SECRETARY", "SECRETARY")
                         .requestMatchers(HttpMethod.PUT, "/attendance/**")
                         .hasAnyRole("SUPER_ADMIN", "GENERAL_SECRETARY", "JOINT_SECRETARY", "ORG_SECRETARY", "SECRETARY")
+                        .requestMatchers(HttpMethod.DELETE, "/attendance/**")
+                        .hasAnyRole("SUPER_ADMIN", "GENERAL_SECRETARY", "JOINT_SECRETARY", "ORG_SECRETARY", "SECRETARY")
                         .requestMatchers(HttpMethod.POST, "/transactions").hasAnyRole("TREASURER", "SUPER_ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/transactions/**").hasAnyRole("TREASURER", "SUPER_ADMIN")
                         .anyRequest().authenticated())

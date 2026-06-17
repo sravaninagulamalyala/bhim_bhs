@@ -45,6 +45,14 @@ class ApiClient {
     return _decode(res);
   }
 
+  Future<dynamic> delete(String path) async {
+    final uri = _uri(path);
+    _logRequest('DELETE', uri);
+    final res = await http.delete(uri, headers: await _headers());
+    _logResponse('DELETE', uri, res);
+    return _decode(res);
+  }
+
   Future<dynamic> multipart(String path, File file, String fieldName) async {
     final uri = _uri(path);
     _logRequest('MULTIPART', uri, 'file=${file.path}');
@@ -63,15 +71,22 @@ class ApiClient {
     _logRequest('DOWNLOAD', uri);
     final res = await http.get(uri, headers: await _headers(json: false));
     _logResponse('DOWNLOAD', uri, res);
-    if (res.statusCode < 200 || res.statusCode >= 300) throw ApiException('Download failed (${res.statusCode})');
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw ApiException('Download failed (${res.statusCode})');
+    }
     return res.bodyBytes;
   }
 
-  Uri _uri(String path, [Map<String, String>? query]) => Uri.parse('$baseUrl$path').replace(queryParameters: query);
+  Uri _uri(String path, [Map<String, String>? query]) =>
+      Uri.parse('$baseUrl$path').replace(queryParameters: query);
 
   Future<Map<String, String>> _headers({bool json = true}) async {
-    final headers = <String, String>{if (json) 'Content-Type': 'application/json'};
-    if (authStore.token != null && authStore.token!.isNotEmpty) headers['Authorization'] = 'Bearer ${authStore.token}';
+    final headers = <String, String>{
+      if (json) 'Content-Type': 'application/json'
+    };
+    if (authStore.token != null && authStore.token!.isNotEmpty) {
+      headers['Authorization'] = 'Bearer ${authStore.token}';
+    }
     return headers;
   }
 
@@ -83,11 +98,15 @@ class ApiClient {
       body = res.body;
     }
     if (res.statusCode < 200 || res.statusCode >= 300) {
-      final msg = body is Map ? (body['message'] ?? body['error'] ?? 'Request failed') : 'Request failed';
+      final msg = body is Map
+          ? (body['message'] ?? body['error'] ?? 'Request failed')
+          : 'Request failed';
       throw ApiException('$msg');
     }
     if (body is Map && body.containsKey('success')) {
-      if (body['success'] == false) throw ApiException('${body['message'] ?? 'Request failed'}');
+      if (body['success'] == false) {
+        throw ApiException('${body['message'] ?? 'Request failed'}');
+      }
       return body['data'];
     }
     return body;

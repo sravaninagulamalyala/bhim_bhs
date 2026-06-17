@@ -12,7 +12,9 @@ import java.util.List;
 
 public interface TransactionRepository extends JpaRepository<TransactionRecord, Long> {
     List<TransactionRecord> findByTransactionDateBetweenOrderByTransactionDateDesc(LocalDate start, LocalDate end);
+    List<TransactionRecord> findByTransactionDateBetweenOrderByTransactionDateAscIdAsc(LocalDate start, LocalDate end);
     List<TransactionRecord> findAllByOrderByTransactionDateDesc();
+    List<TransactionRecord> findAllByOrderByTransactionDateAscIdAsc();
 
     @Query("select coalesce(sum(t.amount), 0) from TransactionRecord t where t.transactionType = :type")
     BigDecimal sumByType(@Param("type") TransactionType type);

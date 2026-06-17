@@ -15,7 +15,8 @@ import '../utils/roles.dart';
 import 'ambedkar_loading_dialog.dart';
 
 class AppScaffold extends StatelessWidget {
-  const AppScaffold({super.key, required this.title, required this.body, this.actions});
+  const AppScaffold(
+      {super.key, required this.title, required this.body, this.actions});
   final String title;
   final Widget body;
   final List<Widget>? actions;
@@ -43,21 +44,38 @@ class BhsDrawer extends StatelessWidget {
         children: [
           const SizedBox(height: 12),
           _item(context, Icons.home, 'Home', const HomeScreen()),
-          if (auth.isLoggedIn) _item(context, Icons.dashboard, 'Dashboard', const DashboardScreen()),
-          _item(context, Icons.app_registration, 'Member Registration', const MemberRegistrationScreen()),
-          if (auth.isLoggedIn) _item(context, Icons.search, 'Search Members', const MemberFamilySearchScreen()),
-          if (Roles.canUpdateMembers(role)) _item(context, Icons.family_restroom, 'Family Mapping', const FamilyMappingScreen()),
-          if (Roles.canManageAttendance(role)) _item(context, Icons.fact_check, 'Attendance', const MarkAttendanceScreen()),
-          if (auth.isLoggedIn) _item(context, Icons.visibility, 'View Attendance', const ViewAttendanceScreen()),
-          if (auth.isLoggedIn) _item(context, Icons.payments, 'Transactions', Roles.canManageTransactions(role) ? const TransactionEntryScreen() : const TransactionViewScreen()),
-          if (auth.isLoggedIn) _item(context, Icons.bar_chart, 'Reports', const ReportsScreen()),
-          if (auth.isLoggedIn) _item(context, Icons.account_circle, 'Profile / Logout', const ProfileScreen()),
+          if (auth.isLoggedIn)
+            _item(
+                context, Icons.dashboard, 'Dashboard', const DashboardScreen()),
+          _item(context, Icons.app_registration, 'Member Registration',
+              const MemberRegistrationScreen()),
+          if (auth.isLoggedIn)
+            _item(context, Icons.search, 'Search Members',
+                const MemberFamilySearchScreen()),
+          if (Roles.canUpdateMembers(role))
+            _item(context, Icons.family_restroom, 'Family Mapping',
+                const FamilyMappingScreen()),
+          if (Roles.canManageAttendance(role))
+            _item(context, Icons.fact_check, 'Attendance',
+                const MarkAttendanceScreen()),
+          if (auth.isLoggedIn)
+            _item(context, Icons.visibility, 'View Attendance',
+                const ViewAttendanceScreen()),
+          if (auth.isLoggedIn)
+            _item(context, Icons.payments, 'Transactions',
+                const TransactionStatementScreen()),
+          if (auth.isLoggedIn)
+            _item(context, Icons.bar_chart, 'Reports', const ReportsScreen()),
+          if (auth.isLoggedIn)
+            _item(context, Icons.account_circle, 'Profile / Logout',
+                const ProfileScreen()),
         ],
       ),
     );
   }
 
-  ListTile _item(BuildContext context, IconData icon, String title, Widget screen) {
+  ListTile _item(
+      BuildContext context, IconData icon, String title, Widget screen) {
     return ListTile(
       leading: Icon(icon),
       title: Text(title),
@@ -72,7 +90,8 @@ class BhsDrawer extends StatelessWidget {
 class LoadingView extends StatelessWidget {
   const LoadingView({super.key});
   @override
-  Widget build(BuildContext context) => const Center(child: AmbedkarLoadingContent());
+  Widget build(BuildContext context) =>
+      const Center(child: AmbedkarLoadingContent());
 }
 
 class ErrorText extends StatelessWidget {
@@ -89,11 +108,16 @@ class EmptyView extends StatelessWidget {
   const EmptyView(this.message, {super.key});
   final String message;
   @override
-  Widget build(BuildContext context) => Center(child: Padding(padding: const EdgeInsets.all(24), child: Text(message)));
+  Widget build(BuildContext context) => Center(
+      child: Padding(padding: const EdgeInsets.all(24), child: Text(message)));
 }
 
 class PrimaryButton extends StatelessWidget {
-  const PrimaryButton({super.key, required this.label, required this.onPressed, this.loading = false});
+  const PrimaryButton(
+      {super.key,
+      required this.label,
+      required this.onPressed,
+      this.loading = false});
   final String label;
   final VoidCallback? onPressed;
   final bool loading;

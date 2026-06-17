@@ -79,7 +79,9 @@ flutter run --dart-define=BHS_API_BASE_URL=https://api.meghaconnect.cloud/api/v1
 - Attendance marking is available to `SUPER_ADMIN`, `GENERAL_SECRETARY`, `JOINT_SECRETARY`, `ORG_SECRETARY`, and `SECRETARY`.
 - Any logged-in staff can view attendance.
 - Mark Attendance now starts with a date picker: the app loads an existing meeting for the selected date or shows `Create Meeting for Selected Date`, then lets staff search members and save attendance without typing a meeting ID.
+- Attendance marking supports insert/update for existing member rows on the selected meeting.
 - View Attendance uses a calendar; dates with meetings are highlighted green, and selecting a green date loads meeting details plus present and absent marked members.
+- View Attendance member cards include attendance ID-backed edit and delete actions for allowed roles. Edit updates attended status; delete soft-removes a mistaken attendance record.
 - Member Search supports name, mobile, house number, and family code. Results include a View action that opens member details, associated family details, and all family members.
 - Family correction actions allow logged-in staff to remove a wrongly tagged member or add/map another member to the selected family after confirmation.
 - Login no longer uses captcha; staff login sends only admin ID and password.
@@ -92,13 +94,28 @@ flutter run --dart-define=BHS_API_BASE_URL=https://api.meghaconnect.cloud/api/v1
 - Ambedkar images now use a shared `AmbedkarImage` widget so Splash, Home, and loading states share the same background-blending treatment.
 - Ambedkar image containers use `BoxFit.contain`, rounded backgrounds that match the scaffold, and avoid visible texture boundaries.
 
+## Transaction Statement Updates
+
+- All logged-in staff can view the transaction statement by month.
+- `TREASURER` and `SUPER_ADMIN` can add credit/debit transactions with transaction date, amount, purpose, remarks, and optional family/member selection for credits.
+- Monthly statement view shows opening balance, total credit, total debit, closing balance, and bank-statement style transaction rows.
+- Statement rows include date, credit/debit type, purpose, remarks, credit amount, debit amount, and balance after transaction.
+- A simple credit/debit percentage bar diagram appears above the statement list.
+- Monthly Excel statement download is available from the transaction screen.
+- Backend balance calculation uses opening balance before the selected month, applies credit/debit rows in date order, and stores recalculated `balanceAfterTransaction` values when new transactions are added.
+
 Key backend endpoints:
 
 - `GET /attendance/meeting-by-date?date=yyyy-MM-dd`
 - `POST /attendance/meeting`
 - `POST /attendance/mark`
+- `PUT /attendance/{attendanceId}`
+- `DELETE /attendance/{attendanceId}`
 - `GET /attendance/meeting-dates?month=yyyy-MM`
 - `GET /attendance/by-date?date=yyyy-MM-dd`
+- `POST /transactions`
+- `GET /transactions/monthly-statement?month=yyyy-MM`
+- `GET /transactions/download-statement?month=yyyy-MM`
 - `GET /search/members?keyword=`
 - `GET /families/search?keyword=`
 - `GET /members/{memberId}/details`

@@ -14,4 +14,6 @@ public interface AttendanceService {
     AttendanceDtos.MeetingResponse meetingByDate(LocalDate date);
     List<AttendanceDtos.MeetingDateSummary> meetingDates(String month);
     AttendanceDtos.AttendanceByDateResponse byDate(LocalDate date);
+    Attendance update(Long attendanceId, AttendanceDtos.UpdateAttendanceRequest request);
+    void delete(Long attendanceId);
 }

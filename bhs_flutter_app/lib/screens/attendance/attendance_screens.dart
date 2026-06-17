@@ -6,6 +6,7 @@ import 'package:table_calendar/table_calendar.dart';
 import '../../core/network/api_client.dart';
 import '../../core/storage/auth_store.dart';
 import '../../core/utils/loading_helper.dart';
+import '../../core/utils/roles.dart';
 import '../../core/widgets/common_widgets.dart';
 
 String _date(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
@@ -15,7 +16,8 @@ DateTime _day(DateTime d) => DateTime(d.year, d.month, d.day);
 class AttendanceMeetingScreen extends StatefulWidget {
   const AttendanceMeetingScreen({super.key});
   @override
-  State<AttendanceMeetingScreen> createState() => _AttendanceMeetingScreenState();
+  State<AttendanceMeetingScreen> createState() =>
+      _AttendanceMeetingScreenState();
 }
 
 class _AttendanceMeetingScreenState extends State<AttendanceMeetingScreen> {
@@ -25,11 +27,18 @@ class _AttendanceMeetingScreenState extends State<AttendanceMeetingScreen> {
   bool loading = false;
 
   Future<void> _create() async {
-    if (title.text.trim().isEmpty) return showSnack(context, 'Meeting title is required');
+    if (title.text.trim().isEmpty) {
+      return showSnack(context, 'Meeting title is required');
+    }
     setState(() => loading = true);
     LoadingHelper.show(context);
     try {
-      await ApiClient(context.read<AuthStore>()).post('/attendance/meeting', body: {'meetingDate': _date(date), 'title': title.text.trim(), 'remarks': remarks.text.trim()});
+      await ApiClient(context.read<AuthStore>())
+          .post('/attendance/meeting', body: {
+        'meetingDate': _date(date),
+        'title': title.text.trim(),
+        'remarks': remarks.text.trim()
+      });
       if (mounted) showSnack(context, 'Meeting created');
     } catch (e) {
       if (mounted) showSnack(context, '$e');
@@ -47,15 +56,26 @@ class _AttendanceMeetingScreenState extends State<AttendanceMeetingScreen> {
             title: Text('Meeting Date: ${_date(date)}'),
             trailing: const Icon(Icons.calendar_month),
             onTap: () async {
-              final picked = await showDatePicker(context: context, firstDate: DateTime(2020), lastDate: DateTime(2100), initialDate: date);
+              final picked = await showDatePicker(
+                  context: context,
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2100),
+                  initialDate: date);
               if (picked != null) setState(() => date = picked);
             },
           ),
-          TextField(controller: title, decoration: const InputDecoration(labelText: 'Title')),
+          TextField(
+              controller: title,
+              decoration: const InputDecoration(labelText: 'Title')),
           const SizedBox(height: 10),
-          TextField(controller: remarks, decoration: const InputDecoration(labelText: 'Remarks'), minLines: 2, maxLines: 3),
+          TextField(
+              controller: remarks,
+              decoration: const InputDecoration(labelText: 'Remarks'),
+              minLines: 2,
+              maxLines: 3),
           const SizedBox(height: 16),
-          PrimaryButton(label: 'Create Meeting', loading: loading, onPressed: _create),
+          PrimaryButton(
+              label: 'Create Meeting', loading: loading, onPressed: _create),
         ]),
       );
 }
@@ -84,7 +104,11 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
   }
 
   Future<void> _pickDate() async {
-    final picked = await showDatePicker(context: context, firstDate: DateTime(2020), lastDate: DateTime(2100), initialDate: selectedDate);
+    final picked = await showDatePicker(
+        context: context,
+        firstDate: DateTime(2020),
+        lastDate: DateTime(2100),
+        initialDate: selectedDate);
     if (picked == null) return;
     setState(() {
       selectedDate = picked;
@@ -99,8 +123,11 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
     setState(() => checkingMeeting = true);
     LoadingHelper.show(context);
     try {
-      final data = await ApiClient(context.read<AuthStore>()).get('/attendance/meeting-by-date', query: {'date': _date(selectedDate)});
-      setState(() => meeting = data is Map ? Map<String, dynamic>.from(data) : null);
+      final data = await ApiClient(context.read<AuthStore>()).get(
+          '/attendance/meeting-by-date',
+          query: {'date': _date(selectedDate)});
+      setState(
+          () => meeting = data is Map ? Map<String, dynamic>.from(data) : null);
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
@@ -113,7 +140,12 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
     setState(() => creatingMeeting = true);
     LoadingHelper.show(context);
     try {
-      final data = await ApiClient(context.read<AuthStore>()).post('/attendance/meeting', body: {'meetingDate': _date(selectedDate), 'title': 'Monthly Meeting', 'remarks': 'General meeting'});
+      final data = await ApiClient(context.read<AuthStore>())
+          .post('/attendance/meeting', body: {
+        'meetingDate': _date(selectedDate),
+        'title': 'Monthly Meeting',
+        'remarks': 'General meeting'
+      });
       setState(() => meeting = _meetingMap(data));
       if (mounted) showSnack(context, 'Meeting ready for selected date');
     } catch (e) {
@@ -125,11 +157,14 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
   }
 
   Future<void> _search() async {
-    if (meeting == null) return showSnack(context, 'Create or load a meeting first');
+    if (meeting == null) {
+      return showSnack(context, 'Create or load a meeting first');
+    }
     setState(() => searching = true);
     LoadingHelper.show(context);
     try {
-      final data = await ApiClient(context.read<AuthStore>()).get('/search/members', query: {'keyword': keyword.text.trim()});
+      final data = await ApiClient(context.read<AuthStore>())
+          .get('/search/members', query: {'keyword': keyword.text.trim()});
       setState(() => members = data is List ? data : []);
     } catch (e) {
       if (mounted) showSnack(context, '$e');
@@ -141,14 +176,20 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
 
   Future<void> _save() async {
     final meetingId = _meetingId(meeting);
-    if (meetingId == null) return showSnack(context, 'Create or load a meeting first');
-    final items = marked.entries.map((e) => {'memberId': e.key, 'attended': e.value}).toList();
+    if (meetingId == null) {
+      return showSnack(context, 'Create or load a meeting first');
+    }
+    final items = marked.entries
+        .map((e) => {'memberId': e.key, 'attended': e.value})
+        .toList();
     if (items.isEmpty) return showSnack(context, 'Mark at least one member');
     setState(() => saving = true);
     LoadingHelper.show(context);
     try {
-      await ApiClient(context.read<AuthStore>()).post('/attendance/mark', body: {'meetingId': meetingId, 'attendanceList': items});
+      await ApiClient(context.read<AuthStore>()).post('/attendance/mark',
+          body: {'meetingId': meetingId, 'attendanceList': items});
       if (mounted) showSnack(context, 'Attendance saved');
+      marked.clear();
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
@@ -163,33 +204,50 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
         body: Column(children: [
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text('Selected Date: ${_date(selectedDate)}'),
-                trailing: const Icon(Icons.calendar_month),
-                onTap: _pickDate,
-              ),
-              if (!checkingMeeting && meeting == null) ...[
-                const SizedBox(height: 8),
-                PrimaryButton(label: 'Create Meeting for Selected Date', loading: creatingMeeting, onPressed: _createMeeting),
-              ],
-              if (meeting != null) ...[
-                Text('${meeting?['title'] ?? 'Meeting'} • ${meeting?['remarks'] ?? ''}', style: const TextStyle(fontWeight: FontWeight.w700)),
-                const SizedBox(height: 10),
-                Row(children: [
-                  Expanded(child: TextField(controller: keyword, decoration: const InputDecoration(labelText: 'Search members'))),
-                  const SizedBox(width: 8),
-                  IconButton.filled(onPressed: searching ? null : _search, icon: const Icon(Icons.search)),
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text('Selected Date: ${_date(selectedDate)}'),
+                    trailing: const Icon(Icons.calendar_month),
+                    onTap: _pickDate,
+                  ),
+                  if (!checkingMeeting && meeting == null) ...[
+                    const SizedBox(height: 8),
+                    PrimaryButton(
+                        label: 'Create Meeting for Selected Date',
+                        loading: creatingMeeting,
+                        onPressed: _createMeeting),
+                  ],
+                  if (meeting != null) ...[
+                    Text(
+                        '${meeting?['title'] ?? 'Meeting'} • ${meeting?['remarks'] ?? ''}',
+                        style: const TextStyle(fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 10),
+                    Row(children: [
+                      Expanded(
+                          child: TextField(
+                              controller: keyword,
+                              decoration: const InputDecoration(
+                                  labelText: 'Search members'))),
+                      const SizedBox(width: 8),
+                      IconButton.filled(
+                          onPressed: searching ? null : _search,
+                          icon: const Icon(Icons.search)),
+                    ]),
+                    const SizedBox(height: 8),
+                    PrimaryButton(
+                        label: 'Save Attendance',
+                        loading: saving,
+                        onPressed: _save),
+                  ],
                 ]),
-                const SizedBox(height: 8),
-                PrimaryButton(label: 'Save Attendance', loading: saving, onPressed: _save),
-              ],
-            ]),
           ),
           Expanded(
             child: meeting == null
-                ? const EmptyView('Select a date and create a meeting to mark attendance')
+                ? const EmptyView(
+                    'Select a date and create a meeting to mark attendance')
                 : members.isEmpty
                     ? const EmptyView('Search members to mark attendance')
                     : ListView.builder(
@@ -199,9 +257,11 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
                           final id = (m['id'] as num).toInt();
                           return CheckboxListTile(
                             value: marked[id] ?? false,
-                            onChanged: (v) => setState(() => marked[id] = v ?? false),
+                            onChanged: (v) =>
+                                setState(() => marked[id] = v ?? false),
                             title: Text('${m['fullName'] ?? ''}'),
-                            subtitle: Text('${m['mobileNo'] ?? ''} • Family ${m['familyId'] ?? '-'} • ${m['houseNo'] ?? ''}'),
+                            subtitle: Text(
+                                '${m['mobileNo'] ?? ''} • Family ${m['familyId'] ?? '-'} • ${m['houseNo'] ?? ''}'),
                           );
                         },
                       ),
@@ -244,14 +304,16 @@ class _ViewAttendanceScreenState extends State<ViewAttendanceScreen> {
   void initState() {
     super.initState();
     selectedDay = _day(DateTime.now());
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadMeetingDates(focusedDay));
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _loadMeetingDates(focusedDay));
   }
 
   Future<void> _loadMeetingDates(DateTime month) async {
     setState(() => loadingDates = true);
     LoadingHelper.show(context);
     try {
-      final data = await ApiClient(context.read<AuthStore>()).get('/attendance/meeting-dates', query: {'month': _month(month)});
+      final data = await ApiClient(context.read<AuthStore>())
+          .get('/attendance/meeting-dates', query: {'month': _month(month)});
       final next = <DateTime, Map<String, dynamic>>{};
       if (data is List) {
         for (final item in data) {
@@ -281,8 +343,10 @@ class _ViewAttendanceScreenState extends State<ViewAttendanceScreen> {
     setState(() => loadingDetails = true);
     LoadingHelper.show(context);
     try {
-      final data = await ApiClient(context.read<AuthStore>()).get('/attendance/by-date', query: {'date': _date(date)});
-      setState(() => attendance = data is Map ? Map<String, dynamic>.from(data) : null);
+      final data = await ApiClient(context.read<AuthStore>())
+          .get('/attendance/by-date', query: {'date': _date(date)});
+      setState(() =>
+          attendance = data is Map ? Map<String, dynamic>.from(data) : null);
     } catch (e) {
       if (mounted) showSnack(context, '$e');
     } finally {
@@ -293,9 +357,15 @@ class _ViewAttendanceScreenState extends State<ViewAttendanceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedSummary = selectedDay == null ? null : meetingsByDate[_day(selectedDay!)];
-    final present = attendance?['presentMembers'] is List ? attendance!['presentMembers'] as List : const [];
-    final absent = attendance?['absentMembers'] is List ? attendance!['absentMembers'] as List : const [];
+    final selectedSummary =
+        selectedDay == null ? null : meetingsByDate[_day(selectedDay!)];
+    final present = attendance?['presentMembers'] is List
+        ? attendance!['presentMembers'] as List
+        : const [];
+    final absent = attendance?['absentMembers'] is List
+        ? attendance!['absentMembers'] as List
+        : const [];
+    final canEdit = Roles.canManageAttendance(context.watch<AuthStore>().role);
     return AppScaffold(
       title: 'View Attendance',
       body: ListView(padding: const EdgeInsets.all(16), children: [
@@ -304,7 +374,9 @@ class _ViewAttendanceScreenState extends State<ViewAttendanceScreen> {
           lastDay: DateTime(2100),
           focusedDay: focusedDay,
           selectedDayPredicate: (day) => isSameDay(selectedDay, day),
-          eventLoader: (day) => meetingsByDate.containsKey(_day(day)) ? const ['meeting'] : const [],
+          eventLoader: (day) => meetingsByDate.containsKey(_day(day))
+              ? const ['meeting']
+              : const [],
           onDaySelected: (selected, focused) {
             setState(() {
               selectedDay = _day(selected);
@@ -316,10 +388,16 @@ class _ViewAttendanceScreenState extends State<ViewAttendanceScreen> {
             focusedDay = focused;
             _loadMeetingDates(focused);
           },
-          calendarStyle: const CalendarStyle(markerDecoration: BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
+          calendarStyle: const CalendarStyle(
+              markerDecoration:
+                  BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
           calendarBuilders: CalendarBuilders(
-            defaultBuilder: (context, day, focused) => meetingsByDate.containsKey(_day(day)) ? _greenDay(day) : null,
-            todayBuilder: (context, day, focused) => meetingsByDate.containsKey(_day(day)) ? _greenDay(day, outlined: true) : null,
+            defaultBuilder: (context, day, focused) =>
+                meetingsByDate.containsKey(_day(day)) ? _greenDay(day) : null,
+            todayBuilder: (context, day, focused) =>
+                meetingsByDate.containsKey(_day(day))
+                    ? _greenDay(day, outlined: true)
+                    : null,
           ),
         ),
         const SizedBox(height: 16),
@@ -327,25 +405,43 @@ class _ViewAttendanceScreenState extends State<ViewAttendanceScreen> {
           Card(
             child: Padding(
               padding: const EdgeInsets.all(12),
-              child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-                _metric('Meeting Date', '${selectedSummary['meetingDate'] ?? ''}'),
-                _metric('Present Count', '${selectedSummary['presentCount'] ?? present.length}'),
-                _metric('Total Marked', '${selectedSummary['totalMarkedCount'] ?? (present.length + absent.length)}'),
-              ]),
+              child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _metric('Meeting Date',
+                        '${selectedSummary['meetingDate'] ?? ''}'),
+                    _metric('Present Count',
+                        '${selectedSummary['presentCount'] ?? present.length}'),
+                    _metric('Total Marked',
+                        '${selectedSummary['totalMarkedCount'] ?? (present.length + absent.length)}'),
+                  ]),
             ),
           ),
-        if (!loadingDetails && selectedSummary == null) const EmptyView('Select a green date to view attendance'),
+        if (!loadingDetails && selectedSummary == null)
+          const EmptyView('Select a green date to view attendance'),
         if (!loadingDetails && attendance != null) ...[
           const SizedBox(height: 8),
-          Text('Present Members', style: Theme.of(context).textTheme.titleMedium),
+          Text('Present Members',
+              style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           if (present.isEmpty) const Text('No present members marked'),
-          for (final member in present) _AttendanceMemberTile(member: Map<String, dynamic>.from(member), present: true),
+          for (final member in present)
+            _AttendanceMemberTile(
+                member: Map<String, dynamic>.from(member),
+                present: true,
+                canEdit: canEdit,
+                onChanged: () => _loadAttendance(selectedDay!)),
           if (absent.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Text('Absent / Not Marked', style: Theme.of(context).textTheme.titleMedium),
+            Text('Absent / Not Marked',
+                style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
-            for (final member in absent) _AttendanceMemberTile(member: Map<String, dynamic>.from(member), present: false),
+            for (final member in absent)
+              _AttendanceMemberTile(
+                  member: Map<String, dynamic>.from(member),
+                  present: false,
+                  canEdit: canEdit,
+                  onChanged: () => _loadAttendance(selectedDay!)),
           ],
         ],
       ]),
@@ -360,29 +456,128 @@ class _ViewAttendanceScreenState extends State<ViewAttendanceScreen> {
           border: outlined ? Border.all(color: Colors.green, width: 2) : null,
           shape: BoxShape.circle,
         ),
-        child: Text('${day.day}', style: TextStyle(color: outlined ? Colors.green : Colors.white, fontWeight: FontWeight.w700)),
+        child: Text('${day.day}',
+            style: TextStyle(
+                color: outlined ? Colors.green : Colors.white,
+                fontWeight: FontWeight.w700)),
       );
 
   Widget _metric(String label, String value) => Expanded(
         child: Column(children: [
-          Text(value, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w700)),
+          Text(value,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.w700)),
           const SizedBox(height: 4),
-          Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12)),
+          Text(label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12)),
         ]),
       );
 }
 
 class _AttendanceMemberTile extends StatelessWidget {
-  const _AttendanceMemberTile({required this.member, required this.present});
+  const _AttendanceMemberTile(
+      {required this.member,
+      required this.present,
+      required this.canEdit,
+      required this.onChanged});
   final Map<String, dynamic> member;
   final bool present;
+  final bool canEdit;
+  final VoidCallback onChanged;
 
   @override
   Widget build(BuildContext context) => Card(
         child: ListTile(
-          leading: Icon(present ? Icons.check_circle : Icons.cancel, color: present ? Colors.green : Colors.red),
-          title: Text('${member['fullName'] ?? 'Member ${member['memberId'] ?? ''}'}'),
-          subtitle: Text('${member['mobileNo'] ?? ''} • Family ${member['familyCode'] ?? member['familyId'] ?? '-'} • ${member['houseNo'] ?? ''}'),
+          leading: Icon(present ? Icons.check_circle : Icons.cancel,
+              color: present ? Colors.green : Colors.red),
+          title: Text(
+              '${member['fullName'] ?? 'Member ${member['memberId'] ?? ''}'}'),
+          subtitle: Text(
+              '${member['mobileNo'] ?? ''} • Family ${member['familyCode'] ?? member['familyId'] ?? '-'} • ${member['houseNo'] ?? ''} • ${present ? 'Present' : 'Absent'}'),
+          trailing: canEdit && _attendanceId != null
+              ? Wrap(spacing: 2, children: [
+                  IconButton(
+                      tooltip: 'Edit',
+                      onPressed: () => _edit(context),
+                      icon: const Icon(Icons.edit)),
+                  IconButton(
+                      tooltip: 'Delete',
+                      onPressed: () => _delete(context),
+                      icon: const Icon(Icons.delete_outline)),
+                ])
+              : null,
         ),
       );
+
+  int? get _attendanceId {
+    final id = member['attendanceId'];
+    return id is num ? id.toInt() : int.tryParse('$id');
+  }
+
+  Future<void> _edit(BuildContext context) async {
+    final id = _attendanceId;
+    if (id == null) return;
+    final nextStatus = !present;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Update Attendance'),
+        content: Text(
+            'Change attendance status to ${nextStatus ? 'present' : 'absent'}?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Update')),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    LoadingHelper.show(context);
+    try {
+      await ApiClient(context.read<AuthStore>())
+          .put('/attendance/$id', body: {'attended': nextStatus});
+      if (context.mounted) showSnack(context, 'Attendance updated');
+      onChanged();
+    } catch (e) {
+      if (context.mounted) showSnack(context, '$e');
+    } finally {
+      if (context.mounted) LoadingHelper.hide(context);
+    }
+  }
+
+  Future<void> _delete(BuildContext context) async {
+    final id = _attendanceId;
+    if (id == null) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Remove Attendance'),
+        content: const Text(
+            'This member was marked by mistake. Do you want to remove this attendance?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Remove')),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    LoadingHelper.show(context);
+    try {
+      await ApiClient(context.read<AuthStore>()).delete('/attendance/$id');
+      if (context.mounted) showSnack(context, 'Attendance removed');
+      onChanged();
+    } catch (e) {
+      if (context.mounted) showSnack(context, '$e');
+    } finally {
+      if (context.mounted) LoadingHelper.hide(context);
+    }
+  }
 }

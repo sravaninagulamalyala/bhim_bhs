@@ -33,11 +33,19 @@ public class TransactionRecord {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal amount;
 
+    private String purpose;
+
     private String remarks;
+
+    @Column(name = "balance_after_transaction", precision = 12, scale = 2)
+    private BigDecimal balanceAfterTransaction;
 
     @Column(name = "created_by")
     private String createdBy;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }

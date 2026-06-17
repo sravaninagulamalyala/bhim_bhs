@@ -30,6 +30,19 @@ public class AttendanceController {
         return ApiResponse.message("Attendance saved", attendanceService.mark(request));
     }
 
+    @PutMapping("/{attendanceId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','GENERAL_SECRETARY','JOINT_SECRETARY','ORG_SECRETARY','SECRETARY')")
+    public ApiResponse<Attendance> update(@PathVariable Long attendanceId, @RequestBody AttendanceDtos.UpdateAttendanceRequest request) {
+        return ApiResponse.message("Attendance updated", attendanceService.update(attendanceId, request));
+    }
+
+    @DeleteMapping("/{attendanceId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','GENERAL_SECRETARY','JOINT_SECRETARY','ORG_SECRETARY','SECRETARY')")
+    public ApiResponse<Void> delete(@PathVariable Long attendanceId) {
+        attendanceService.delete(attendanceId);
+        return ApiResponse.message("Attendance deleted", null);
+    }
+
     @GetMapping("/meeting-by-date")
     public ApiResponse<AttendanceDtos.MeetingResponse> meetingByDate(@RequestParam LocalDate date) {
         AttendanceDtos.MeetingResponse meeting = attendanceService.meetingByDate(date);

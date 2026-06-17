@@ -20,32 +20,52 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final role = context.watch<AuthStore>().role;
     final cards = <_DashCard>[
-      if (Roles.isSuperAdmin(role)) _DashCard('Excel Upload', Icons.upload_file, const ExcelUploadScreen()),
-      if (Roles.isSuperAdmin(role)) _DashCard('Staff Management', Icons.admin_panel_settings, const StaffManagementScreen()),
-      if (Roles.isSuperAdmin(role)) _DashCard('Audit Logs', Icons.history, const AuditLogsScreen()),
-      if (Roles.canUpdateMembers(role)) _DashCard('Members', Icons.people, const MemberUpdateScreen()),
-      if (Roles.canUpdateMembers(role)) _DashCard('Family Mapping', Icons.family_restroom, const FamilyMappingScreen()),
-      if (Roles.canManageAttendance(role)) _DashCard('Mark Attendance', Icons.fact_check, const MarkAttendanceScreen()),
-      _DashCard('View Attendance', Icons.visibility, const ViewAttendanceScreen()),
-      if (Roles.canManageTransactions(role)) _DashCard('Transactions', Icons.payments, const TransactionEntryScreen()),
-      if (!Roles.canManageTransactions(role)) _DashCard('Transactions View', Icons.receipt_long, const TransactionViewScreen()),
+      if (Roles.isSuperAdmin(role))
+        _DashCard('Excel Upload', Icons.upload_file, const ExcelUploadScreen()),
+      if (Roles.isSuperAdmin(role))
+        _DashCard('Staff Management', Icons.admin_panel_settings,
+            const StaffManagementScreen()),
+      if (Roles.isSuperAdmin(role))
+        _DashCard('Audit Logs', Icons.history, const AuditLogsScreen()),
+      if (Roles.canUpdateMembers(role))
+        _DashCard('Members', Icons.people, const MemberUpdateScreen()),
+      if (Roles.canUpdateMembers(role))
+        _DashCard('Family Mapping', Icons.family_restroom,
+            const FamilyMappingScreen()),
+      if (Roles.canManageAttendance(role))
+        _DashCard(
+            'Mark Attendance', Icons.fact_check, const MarkAttendanceScreen()),
+      _DashCard(
+          'View Attendance', Icons.visibility, const ViewAttendanceScreen()),
+      _DashCard('Transactions', Icons.receipt_long,
+          const TransactionStatementScreen()),
       _DashCard('Reports', Icons.bar_chart, const ReportsScreen()),
       _DashCard('Search', Icons.search, const MemberFamilySearchScreen()),
     ];
     return AppScaffold(
       title: 'Dashboard',
-      actions: [IconButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen())), icon: const Icon(Icons.account_circle))],
+      actions: [
+        IconButton(
+            onPressed: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const ProfileScreen())),
+            icon: const Icon(Icons.account_circle))
+      ],
       body: GridView.builder(
         padding: const EdgeInsets.all(16),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12),
         itemCount: cards.length,
         itemBuilder: (_, i) => InkWell(
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => cards[i].screen)),
+          onTap: () => Navigator.push(
+              context, MaterialPageRoute(builder: (_) => cards[i].screen)),
           child: Card(
-            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            child:
+                Column(mainAxisAlignment: MainAxisAlignment.center, children: [
               Icon(cards[i].icon, size: 42, color: const Color(0xFF0D47A1)),
               const SizedBox(height: 12),
-              Text(cards[i].title, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w700)),
+              Text(cards[i].title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontWeight: FontWeight.w700)),
             ]),
           ),
         ),

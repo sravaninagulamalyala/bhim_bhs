@@ -80,8 +80,11 @@ public class AttendanceServiceImpl implements AttendanceService {
             attendance.setMemberId(member.getId());
             attendance.setFamilyId(member.getFamilyId());
             attendance.setAttended(Boolean.TRUE.equals(item.attended()));
+            attendance.setActive(true);
             attendance.setMarkedBy(currentUser());
             attendance.setMarkedAt(LocalDateTime.now());
+            attendance.setUpdatedBy(currentUser());
+            attendance.setUpdatedAt(LocalDateTime.now());
             saved.add(attendanceRepository.save(attendance));
             if (isNew) created++; else updated++;
         }
@@ -92,7 +95,7 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     public List<Attendance> byMeeting(Long meetingId) {
-        return attendanceRepository.findByMeetingId(meetingId);
+        return attendanceRepository.findByMeetingIdAndActiveTrue(meetingId);
     }
 
     @Override
@@ -114,8 +117,8 @@ public class AttendanceServiceImpl implements AttendanceService {
                 .map(meeting -> new AttendanceDtos.MeetingDateSummary(
                         meeting.getId(),
                         meeting.getMeetingDate(),
-                        attendanceRepository.countByMeetingIdAndAttendedTrue(meeting.getId()),
-                        attendanceRepository.countByMeetingId(meeting.getId())))
+                        attendanceRepository.countByMeetingIdAndActiveTrueAndAttendedTrue(meeting.getId()),
+                        attendanceRepository.countByMeetingIdAndActiveTrue(meeting.getId())))
                 .toList();
     }
 
@@ -125,12 +128,40 @@ public class AttendanceServiceImpl implements AttendanceService {
         Meeting meeting = meetingRepository.findFirstByMeetingDate(date).orElseThrow(() -> new ResourceNotFoundException("Meeting not found"));
         List<Map<String, Object>> present = new ArrayList<>();
         List<Map<String, Object>> absent = new ArrayList<>();
-        for (Attendance attendance : attendanceRepository.findByMeetingId(meeting.getId())) {
+        for (Attendance attendance : attendanceRepository.findByMeetingIdAndActiveTrue(meeting.getId())) {
             Member member = memberRepository.findById(attendance.getMemberId()).orElse(null);
             Map<String, Object> row = memberRow(member, attendance);
             if (attendance.isAttended()) present.add(row); else absent.add(row);
         }
         return new AttendanceDtos.AttendanceByDateResponse(toMeetingResponse(meeting), present, absent);
+    }
+
+    @Override
+    public Attendance update(Long attendanceId, AttendanceDtos.UpdateAttendanceRequest request) {
+        if (request.attended() == null) throw new BadRequestException("Attended status is required");
+        Attendance attendance = attendanceRepository.findById(attendanceId)
+                .filter(Attendance::isActive)
+                .orElseThrow(() -> new ResourceNotFoundException("Attendance not found"));
+        attendance.setAttended(request.attended());
+        attendance.setMarkedBy(currentUser());
+        attendance.setMarkedAt(LocalDateTime.now());
+        attendance.setUpdatedBy(currentUser());
+        attendance.setUpdatedAt(LocalDateTime.now());
+        Attendance saved = attendanceRepository.save(attendance);
+        auditService.log("UPDATE", "ATTENDANCE", "Updated attendance id: " + saved.getId());
+        return saved;
+    }
+
+    @Override
+    public void delete(Long attendanceId) {
+        Attendance attendance = attendanceRepository.findById(attendanceId)
+                .filter(Attendance::isActive)
+                .orElseThrow(() -> new ResourceNotFoundException("Attendance not found"));
+        attendance.setActive(false);
+        attendance.setUpdatedBy(currentUser());
+        attendance.setUpdatedAt(LocalDateTime.now());
+        attendanceRepository.save(attendance);
+        auditService.log("DELETE", "ATTENDANCE", "Deleted attendance id: " + attendanceId);
     }
 
     private AttendanceDtos.MeetingResponse toMeetingResponse(Meeting meeting) {
@@ -139,6 +170,7 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     private Map<String, Object> memberRow(Member member, Attendance attendance) {
         Map<String, Object> row = new LinkedHashMap<>();
+        row.put("attendanceId", attendance.getId());
         row.put("memberId", attendance.getMemberId());
         row.put("fullName", member == null ? "" : member.getFullName());
         row.put("mobileNo", member == null ? "" : member.getMobileNo());
@@ -149,6 +181,8 @@ public class AttendanceServiceImpl implements AttendanceService {
         row.put("attended", attendance.isAttended());
         row.put("markedBy", attendance.getMarkedBy());
         row.put("markedAt", attendance.getMarkedAt());
+        row.put("updatedBy", attendance.getUpdatedBy());
+        row.put("updatedAt", attendance.getUpdatedAt());
         return row;
     }
 

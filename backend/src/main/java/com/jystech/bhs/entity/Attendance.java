@@ -31,4 +31,13 @@ public class Attendance {
 
     @Column(name = "marked_at")
     private LocalDateTime markedAt = LocalDateTime.now();
+
+    @Column(name = "updated_by")
+    private String updatedBy;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private boolean active = true;
 }
